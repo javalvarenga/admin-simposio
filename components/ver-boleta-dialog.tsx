@@ -14,26 +14,14 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-
-interface Participante {
-  id: string
-  nombre: string
-  email: string
-  tipo: string
-  estadoPago: string
-  tipoPago: string
-  fechaRegistro: string
-  telefono: string
-  institucion: string
-  boletaUrl: string
-}
+import { Participante } from "./participantes-table"
 
 interface VerBoletaDialogProps {
   isOpen: boolean
   onClose: () => void
   participante: Participante
-  onCambiarEstado: (id: string, nuevoEstado: string) => void
-  onCambiarTipoPago?: (id: string, nuevoTipo: string) => void
+  onCambiarEstado: (id: number, nuevoEstado: string) => void
+  onCambiarTipoPago?: (id: number, nuevoTipo: string) => void
 }
 
 export function VerBoletaDialog({
@@ -47,10 +35,10 @@ export function VerBoletaDialog({
   const [tipoPagoSeleccionado, setTipoPagoSeleccionado] = useState(participante.tipoPago)
 
   const handleCambiarEstado = () => {
-    onCambiarEstado(participante.id, estadoSeleccionado)
+    onCambiarEstado(participante.idParticipante, estadoSeleccionado)
 
     if (onCambiarTipoPago && tipoPagoSeleccionado !== participante.tipoPago) {
-      onCambiarTipoPago(participante.id, tipoPagoSeleccionado)
+      onCambiarTipoPago(participante.idParticipante, tipoPagoSeleccionado)
     }
 
     onClose()
@@ -68,11 +56,11 @@ export function VerBoletaDialog({
             <span className="font-medium">Estado actual:</span>
             <Badge
               variant={
-                participante.estadoPago === "Pagado"
+                participante.estadoPago === "C"
                   ? "success"
-                  : participante.estadoPago === "Verificacion pendiente"
+                  : participante.estadoPago === "V"
                     ? "warning"
-                    : participante.estadoPago === "Pendiente de Pago"
+                    : participante.estadoPago === "P"
                       ? "default"
                       : "destructive"
               }
@@ -83,7 +71,7 @@ export function VerBoletaDialog({
 
           <div className="flex justify-between items-center">
             <span className="font-medium">Tipo de pago:</span>
-            <Badge variant={participante.tipoPago === "Efectivo" ? "outline" : "secondary"}>
+            <Badge variant={participante.tipoPago === "E" ? "outline" : "secondary"}>
               {participante.tipoPago}
             </Badge>
           </div>
@@ -95,7 +83,7 @@ export function VerBoletaDialog({
 
           <div className="border rounded-md overflow-hidden">
             <Image
-              src={participante.boletaUrl || "/placeholder.svg"}
+              src={participante?.boleta || "/placeholder.svg"}
               alt="Boleta de pago"
               width={400}
               height={300}

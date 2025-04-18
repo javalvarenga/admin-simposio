@@ -2,18 +2,12 @@
 
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
 
 export function DashboardHeader() {
   const router = useRouter()
-  const { toast } = useToast()
 
   const handleLogout = () => {
     // En un caso real, eliminaríamos la sesión
-    toast({
-      title: "Sesión cerrada",
-      description: "Has cerrado sesión correctamente",
-    })
     router.push("/")
   }
 
