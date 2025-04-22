@@ -43,7 +43,7 @@ import { useGetAllParticipants } from "@/hooks/Participants/useGetAllParticipant
 import { changePaymmentStatus } from "@/services/Participants";
 import { changeKitStatus } from "@/services/Participants";
 import { KitEntregadoIcon, KitNoEntregadoIcon } from "@/components/ui/icons"; // Asegúrate de importar los íconos correctos
-
+import { deleteParticipant } from "@/services/Participants"; // Asegúrate de importar la función de eliminación
 // Tipos para los participantes
 type TipoParticipante = "E" | "C" | "I";
 // Actualizar el tipo EstadoPago
@@ -208,11 +208,34 @@ export function ParticipantesTable() {
     setIsEditOpen(false);
   };
 
-  // Función para eliminar un participante
-  const eliminarParticipante = (id: number) => {
+// Función para eliminar un participante
+const eliminarParticipante = async (id: number) => {
+  try {
+    // Llamada al backend
+    const result = await deleteParticipant(id);
+    console.log("Participante eliminado:", result);
+
+    // Actualización en el frontend
     setParticipantes(participantes?.filter((p) => p.idParticipante !== id));
     setIsDeleteOpen(false);
-  };
+
+    sweetAlert(
+      "Participante eliminado",
+      "El participante fue eliminado correctamente.",
+      "success",
+      5000
+    );
+  } catch (error) {
+    console.error("Error al eliminar participante:", error);
+    sweetAlert(
+      "Error",
+      "No se pudo eliminar el participante.",
+      "error",
+      5000
+    );
+  }
+};
+
 
   // Función para formatear la fecha
   const formatDate = (isoString: string): string => {
@@ -661,25 +684,25 @@ export function ParticipantesTable() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                       <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button variant="outline" size="icon" title="Cambiar estado del kit">
-      {participante.kit === 1 ? (
-        <KitEntregadoIcon /> // Ícono verde si está entregado
-      ) : (
-        <KitNoEntregadoIcon /> // Ícono rojo si no está entregado
-      )}
-    </Button>
-  </DropdownMenuTrigger>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" title="Cambiar estado del kit">
+                            {participante.kit === 1 ? (
+                              <KitEntregadoIcon /> // Ícono verde si está entregado
+                            ) : (
+                              <KitNoEntregadoIcon /> // Ícono rojo si no está entregado
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
 
-  <DropdownMenuContent>
-    <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
-      Entregado
-    </DropdownMenuItem>
-    <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
-      No entregado
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
+                            Entregado
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
+                            No entregado
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         variant="outline"
                         size="icon"
