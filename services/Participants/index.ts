@@ -7,3 +7,9 @@ export function changePaymmentStatus(participantId: number, newStatus: string) {
     estadoPago: newStatus,
   });
 }
+
+export function changeKitStatus(participantId: number, newStatus: number) {
+  return api.patch(`/participants/updateKitStatus/${participantId}`, {
+    kit: newStatus,
+  });
+}

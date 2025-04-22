@@ -41,13 +41,16 @@ import {
 } from "lucide-react";
 import { useGetAllParticipants } from "@/hooks/Participants/useGetAllParticipants";
 import { changePaymmentStatus } from "@/services/Participants";
+import { changeKitStatus } from "@/services/Participants";
 
 // Tipos para los participantes
-type TipoParticipante = "Estudiante" | "Catedrático" | "Invitado";
+type TipoParticipante = "E" | "C" | "I";
 // Actualizar el tipo EstadoPago
 type EstadoPago = "P" | "C" | "R" | "V";
 // Nuevo tipo para el tipo de pago
-type TipoPago = "E" | "C";
+type TipoPago = "E" | "D";
+
+type estadoKit = 0 | 1;
 
 export interface Participante {
   idParticipante: number;
@@ -65,10 +68,40 @@ export interface Participante {
   Rol: string;
   codigoQR: string;
   certificadoEnviado: boolean; // tinyint lo puedes mapear a boolean en TS
+  kit: number; // tinyint lo puedes mapear a boolean en TS
   estadoPago: EstadoPago;
   tipoPago: TipoPago;
   boleta: string;
 }
+
+// Mapeos para traducción
+const tipoParticipanteMap: Record<TipoParticipante, string> = {
+  E: "Estudiante",
+  C: "Catedrático",
+  I: "Invitado",
+};
+
+const tipoPagoMap: Record<TipoPago, string> = {
+  E: "Efectivo",
+  D: "Depósito",
+};
+
+const estadoPagoMap: Record<EstadoPago, string> = {
+  C: "Completado",
+  P: "Pendiente",
+  R: "Rechazado",
+  V: "Verificando",
+};
+
+
+
+const formatDate = (isoString: string): string => {
+  const date = new Date(isoString);
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  return `${day}-${month}-${year}`;
+};
 
 export function ParticipantesTable() {
   const [participantes, setParticipantes] = useState<Participante[]>([]);
@@ -133,6 +166,26 @@ export function ParticipantesTable() {
     );
   };
 
+    // Función para cambiar el estado del kit
+    const cambiarEstadoKit = async (id: number, nuevoEstado: estadoKit) => {
+      setParticipantes(
+        participantes.map((p) =>
+          p.idParticipante === id ? { ...p, kit: nuevoEstado } : p
+        )
+      );
+  
+      const result = await changeKitStatus(id, nuevoEstado);
+      console.log("result of changeKitStatus", result);
+  
+      sweetAlert(
+        "Estado del kit actualizado",
+        "El estado del kit fue cambiado correctamente",
+        "success",
+        5000
+      );
+    };
+
+
   // Función para cambiar el tipo de pago
   const cambiarTipoPago = (id: number, nuevoTipo: TipoPago) => {
     setParticipantes(
@@ -158,6 +211,15 @@ export function ParticipantesTable() {
   const eliminarParticipante = (id: number) => {
     setParticipantes(participantes?.filter((p) => p.idParticipante !== id));
     setIsDeleteOpen(false);
+  };
+
+  // Función para formatear la fecha
+  const formatDate = (isoString: string): string => {
+    const date = new Date(isoString);
+    const day = String(date.getUTCDate()).padStart(2, '0'); // Día con 2 dígitos
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Meses son 0-based
+    const year = date.getUTCFullYear();
+    return `${day}-${month}-${year}`;
   };
 
   // Aplicar filtros y ordenamiento
@@ -361,9 +423,9 @@ export function ParticipantesTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos los tipos</SelectItem>
-                  <SelectItem value="Estudiante">Estudiante</SelectItem>
-                  <SelectItem value="Catedrático">Catedrático</SelectItem>
-                  <SelectItem value="Invitado">Invitado</SelectItem>
+                  <SelectItem value="E">Estudiante</SelectItem>
+                  <SelectItem value="C">Catedrático</SelectItem>
+                  <SelectItem value="I">Invitado</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -373,14 +435,10 @@ export function ParticipantesTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos los estados</SelectItem>
-                  <SelectItem value="Pendiente de Pago">
-                    Pendiente de Pago
-                  </SelectItem>
-                  <SelectItem value="Verificacion pendiente">
-                    Verificacion pendiente
-                  </SelectItem>
-                  <SelectItem value="Pagado">Pagado</SelectItem>
-                  <SelectItem value="Rechazado">Rechazado</SelectItem>
+                  <SelectItem value="P">Pendiente</SelectItem>
+                  <SelectItem value="C">Completado</SelectItem>
+                  <SelectItem value="R">Recibido</SelectItem>
+                  <SelectItem value="V">Verificando</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -390,8 +448,8 @@ export function ParticipantesTable() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos los tipos</SelectItem>
-                  <SelectItem value="Efectivo">Efectivo</SelectItem>
-                  <SelectItem value="Comprobante">Comprobante</SelectItem>
+                  <SelectItem value="E">Efectivo</SelectItem>
+                  <SelectItem value="D">Depósito</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -403,6 +461,10 @@ export function ParticipantesTable() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead onClick={() => requestSort("idParticipante")}>
+                ID
+                {renderSortIcon("idParticipante")}
+              </TableHead>
               <TableHead
                 className="cursor-pointer"
                 onClick={() => requestSort("nombre")}
@@ -426,7 +488,7 @@ export function ParticipantesTable() {
                 onClick={() => requestSort("tipoParticipante")}
               >
                 <div className="flex items-center">
-                  Tipo
+                  Tipo participante
                   {renderSortIcon("tipoParticipante")}
                 </div>
               </TableHead>
@@ -457,6 +519,14 @@ export function ParticipantesTable() {
                   {renderSortIcon("fechaRegistro")}
                 </div>
               </TableHead>
+              <TableHead onClick={() => requestSort("certificadoEnviado")}>
+                Cert. Enviado
+                {renderSortIcon("certificadoEnviado")}
+              </TableHead>
+              <TableHead onClick={() => requestSort("kit")}>
+                Kit entregado
+                {renderSortIcon("kit")}
+              </TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -486,53 +556,42 @@ export function ParticipantesTable() {
             ) : (
               filteredAndSortedParticipantes?.map((participante) => (
                 <TableRow key={participante.idParticipante}>
+                  <TableCell>{participante.idParticipante}</TableCell>
                   <TableCell className="font-medium">
                     {participante.nombre}
                   </TableCell>
                   <TableCell>{participante.correoElectronico}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        participante.tipoParticipante === "Estudiante"
-                          ? "default"
-                          : participante.tipoParticipante === "Catedrático"
-                          ? "secondary"
-                          : "outline"
-                      }
-                    >
-                      {participante.tipoParticipante}
+                    <Badge variant="secondary">
+                      {tipoParticipanteMap[participante.tipoParticipante]}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={
-                        participante.estadoPago === "C"
-                          ? "success"
-                          : participante.estadoPago === "V"
-                          ? "warning"
-                          : participante.estadoPago === "P"
-                          ? "default"
-                          : "destructive"
+                        participante.estadoPago === "C" ? "success" :
+                        participante.estadoPago === "P" ? "default" :
+                        participante.estadoPago === "R" ? "destructive" :
+                        participante.estadoPago === "V" ? "warning" : "secondary"
                       }
                     >
-                      {{
-                        P: "Pendiente de Pago",
-                        V: "Verificación pendiente",
-                        C: "Pagado",
-                        R: "Rechazado",
-                      }[participante.estadoPago ?? ""] || ""}
+                      {estadoPagoMap[participante.estadoPago]}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        participante.tipoPago === "E" ? "outline" : "secondary"
-                      }
-                    >
-                      {participante.tipoPago}
+                    <Badge variant="outline">
+                      {tipoPagoMap[participante.tipoPago]}
                     </Badge>
                   </TableCell>
-                  <TableCell>{participante.fechaRegistro}</TableCell>
+                  <TableCell>{formatDate(participante.fechaRegistro)}</TableCell>
+                  <TableCell>
+                    {participante.certificadoEnviado ? "Sí" : "No"}
+                  </TableCell>
+                  <TableCell>
+                  <Badge variant={participante.kit ? "success" : "destructive"}>
+                    {participante.kit ? "Sí" : "No"}
+                  </Badge>
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button
@@ -576,7 +635,7 @@ export function ParticipantesTable() {
                               )
                             }
                           >
-                            Verificacion pendiente
+                            Verificación pendiente
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
@@ -600,7 +659,22 @@ export function ParticipantesTable() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-
+                      
+                      <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title="Cambiar estado del kit">
+                <CreditCard className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
+                Entregado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
+                No entregado
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
                       <Button
                         variant="outline"
                         size="icon"
