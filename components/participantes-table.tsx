@@ -44,6 +44,8 @@ import { changePaymmentStatus } from "@/services/Participants";
 import { changeKitStatus } from "@/services/Participants";
 import { KitEntregadoIcon, KitNoEntregadoIcon } from "@/components/ui/icons"; // Asegúrate de importar los íconos correctos
 import { deleteParticipant } from "@/services/Participants"; // Asegúrate de importar la función de eliminación
+import { updateParticipante } from "@/services/Participants"; // Asegúrate de importar la función de actualización
+
 // Tipos para los participantes
 type TipoParticipante = "E" | "C" | "I";
 // Actualizar el tipo EstadoPago
@@ -167,25 +169,36 @@ export function ParticipantesTable() {
     );
   };
 
-    // Función para cambiar el estado del kit
-    const cambiarEstadoKit = async (id: number, nuevoEstado: estadoKit) => {
-      setParticipantes(
-        participantes.map((p) =>
-          p.idParticipante === id ? { ...p, kit: nuevoEstado } : p
-        )
-      );
-  
-      const result = await changeKitStatus(id, nuevoEstado);
-      console.log("result of changeKitStatus", result);
-  
-      sweetAlert(
-        "Estado del kit actualizado",
-        "El estado del kit fue cambiado correctamente",
-        "success",
-        5000
-      );
-    };
+ // Función para actualizar un participante
+const actualizarParticipante = async (participanteActualizado: Participante) => {
+  try {
+    const result = await updateParticipante(participanteActualizado)
 
+    setParticipantes(
+      participantes.map((p) =>
+        p.idParticipante === participanteActualizado.idParticipante
+          ? result // Usamos la respuesta del backend por si regresa el objeto actualizado
+          : p
+      )
+    )
+
+    sweetAlert(
+      "Participante actualizado",
+      "Los datos del participante fueron actualizados correctamente.",
+      "success",
+      5000
+    )
+
+    setIsEditOpen(false)
+  } catch (error) {
+    sweetAlert(
+      "Error",
+      "Ocurrió un error al actualizar el participante.",
+      "error",
+      5000
+    )
+  }
+}
 
   // Función para cambiar el tipo de pago
   const cambiarTipoPago = (id: number, nuevoTipo: TipoPago) => {
