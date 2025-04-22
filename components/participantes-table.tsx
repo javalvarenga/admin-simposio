@@ -42,6 +42,7 @@ import {
 import { useGetAllParticipants } from "@/hooks/Participants/useGetAllParticipants";
 import { changePaymmentStatus } from "@/services/Participants";
 import { changeKitStatus } from "@/services/Participants";
+import { KitEntregadoIcon, KitNoEntregadoIcon } from "@/components/ui/icons"; // Asegúrate de importar los íconos correctos
 
 // Tipos para los participantes
 type TipoParticipante = "E" | "C" | "I";
@@ -659,22 +660,26 @@ export function ParticipantesTable() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      
                       <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" title="Cambiar estado del kit">
-                <CreditCard className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
-                Entregado
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
-                No entregado
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" size="icon" title="Cambiar estado del kit">
+      {participante.kit === 1 ? (
+        <KitEntregadoIcon /> // Ícono verde si está entregado
+      ) : (
+        <KitNoEntregadoIcon /> // Ícono rojo si no está entregado
+      )}
+    </Button>
+  </DropdownMenuTrigger>
+
+  <DropdownMenuContent>
+    <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
+      Entregado
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
+      No entregado
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
                       <Button
                         variant="outline"
                         size="icon"
