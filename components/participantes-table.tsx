@@ -762,7 +762,7 @@ const eliminarParticipante = async (id: number) => {
           isOpen={isDeleteOpen}
           onClose={() => setIsDeleteOpen(false)}
           participante={selectedParticipante}
-          onConfirm={() => eliminarParticipante(selectedParticipante.id)}
+          onConfirm={() => eliminarParticipante(selectedParticipante.idParticipante)}
         />
       )}
     </>
