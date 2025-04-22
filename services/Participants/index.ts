@@ -15,5 +15,5 @@ export function changeKitStatus(participantId: number, newStatus: number) {
 }
 
 export function deleteParticipant(participantId: number) {
-  return api.delete(`/participants/delete/${participantId}`);
+  return api.delete(`/participants/deleteParticipant/${participantId}`);
 }
