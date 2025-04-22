@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Slider, SliderTrack, SliderRange, SliderStep, SliderThumb } from "@/components/ui/slider"
 
 interface Participante {
   tipoParticipante: string
@@ -28,7 +27,7 @@ interface Participante {
   Rol: string
   tipoPago: string
   boleta: string
-  certificadoEnviado: number // Usando Slider
+  certificadoEnviado: number
 }
 
 interface EditarParticipanteDrawerProps {
@@ -50,10 +49,6 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSliderChange = (name: string, value: number) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSave(formData)
@@ -62,139 +57,127 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent>
-        <div className="mx-auto w-full max-w-sm">
+        <div className="mx-auto w-full max-w-sm h-[85vh] overflow-y-auto">
           <DrawerHeader>
             <DrawerTitle>Editar Participante</DrawerTitle>
             <DrawerDescription>Actualice la información del participante</DrawerDescription>
           </DrawerHeader>
+
           <form onSubmit={handleSubmit}>
-            <div className="p-4 pb-0">
-              <div className="grid gap-4">
-                {/* Tipo de Participante */}
-                <div className="grid gap-2">
-                  <Label htmlFor="tipoParticipante">Tipo de Participante</Label>
-                  <Select value={formData.tipoParticipante} onValueChange={(value) => handleSelectChange("tipoParticipante", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="E">Estudiante</SelectItem>
-                      <SelectItem value="C">Catedrático</SelectItem>
-                      <SelectItem value="I">Invitado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="p-4 pt-0 grid gap-4">
+              {/* tipoParticipante */}
+              <div className="grid gap-2">
+                <Label htmlFor="tipoParticipante">Tipo de Participante</Label>
+                <Select value={formData.tipoParticipante} onValueChange={(value) => handleSelectChange("tipoParticipante", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="E">Estudiante</SelectItem>
+                    <SelectItem value="C">Catedrático</SelectItem>
+                    <SelectItem value="I">Invitado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Nombre */}
-                <div className="grid gap-2">
-                  <Label htmlFor="nombre">Nombre</Label>
-                  <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} />
-                </div>
+              {/* nombre */}
+              <div className="grid gap-2">
+                <Label htmlFor="nombre">Nombre</Label>
+                <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} />
+              </div>
 
-                {/* Carnet de Carrera */}
-                <div className="grid gap-2">
-                  <Label htmlFor="carnetCarrera">Carnet Carrera</Label>
-                  <Input id="carnetCarrera" name="carnetCarrera" value={formData.carnetCarrera} onChange={handleChange} />
-                </div>
+              {/* carnetCarrera */}
+              <div className="grid gap-2">
+                <Label htmlFor="carnetCarrera">Carnet Carrera</Label>
+                <Input id="carnetCarrera" name="carnetCarrera" value={formData.carnetCarrera} onChange={handleChange} />
+              </div>
 
-                {/* Carnet Año */}
-                <div className="grid gap-2">
-                  <Label htmlFor="carnetAnio">Carnet Año</Label>
-                  <Input id="carnetAnio" name="carnetAnio" value={formData.carnetAnio} onChange={handleChange} />
-                </div>
+              {/* carnetAnio */}
+              <div className="grid gap-2">
+                <Label htmlFor="carnetAnio">Carnet Año</Label>
+                <Input id="carnetAnio" name="carnetAnio" value={formData.carnetAnio} onChange={handleChange} />
+              </div>
 
-                {/* Carnet Serie */}
-                <div className="grid gap-2">
-                  <Label htmlFor="carnetSerie">Carnet Serie</Label>
-                  <Input id="carnetSerie" name="carnetSerie" value={formData.carnetSerie} onChange={handleChange} />
-                </div>
+              {/* carnetSerie */}
+              <div className="grid gap-2">
+                <Label htmlFor="carnetSerie">Carnet Serie</Label>
+                <Input id="carnetSerie" name="carnetSerie" value={formData.carnetSerie} onChange={handleChange} />
+              </div>
 
-                {/* Correo Electrónico */}
-                <div className="grid gap-2">
-                  <Label htmlFor="correoElectronico">Correo Electrónico</Label>
-                  <Input id="correoElectronico" name="correoElectronico" value={formData.correoElectronico} onChange={handleChange} />
-                </div>
+              {/* correoElectronico */}
+              <div className="grid gap-2">
+                <Label htmlFor="correoElectronico">Correo Electrónico</Label>
+                <Input id="correoElectronico" name="correoElectronico" value={formData.correoElectronico} onChange={handleChange} />
+              </div>
 
-                {/* Teléfono */}
-                <div className="grid gap-2">
-                  <Label htmlFor="telefono">Teléfono</Label>
-                  <Input id="telefono" name="telefono" value={formData.telefono} onChange={handleChange} />
-                </div>
+              {/* telefono */}
+              <div className="grid gap-2">
+                <Label htmlFor="telefono">Teléfono</Label>
+                <Input id="telefono" name="telefono" value={formData.telefono} onChange={handleChange} />
+              </div>
 
-                {/* Talla */}
-                <div className="grid gap-2">
-                  <Label htmlFor="talla">Talla</Label>
-                  <Select value={formData.talla} onValueChange={(value) => handleSelectChange("talla", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar talla" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="S">S</SelectItem>
-                      <SelectItem value="M">M</SelectItem>
-                      <SelectItem value="L">L</SelectItem>
-                      <SelectItem value="XL">XL</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* talla */}
+              <div className="grid gap-2">
+                <Label htmlFor="talla">Talla</Label>
+                <Select value={formData.talla} onValueChange={(value) => handleSelectChange("talla", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar talla" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="S">S</SelectItem>
+                    <SelectItem value="M">M</SelectItem>
+                    <SelectItem value="L">L</SelectItem>
+                    <SelectItem value="XL">XL</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Fecha de Nacimiento */}
-                <div className="grid gap-2">
-                  <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
-                  <Input id="fechaNacimiento" name="fechaNacimiento" type="date" value={formData.fechaNacimiento} onChange={handleChange} />
-                </div>
+              {/* fechaNacimiento */}
+              <div className="grid gap-2">
+                <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
+                <Input id="fechaNacimiento" name="fechaNacimiento" type="date" value={formData.fechaNacimiento} onChange={handleChange} />
+              </div>
 
-                {/* Institución */}
-                <div className="grid gap-2">
-                  <Label htmlFor="institucion">Institución</Label>
-                  <Input id="institucion" name="institucion" value={formData.institucion} onChange={handleChange} />
-                </div>
+              {/* institucion */}
+              <div className="grid gap-2">
+                <Label htmlFor="institucion">Institución</Label>
+                <Input id="institucion" name="institucion" value={formData.institucion} onChange={handleChange} />
+              </div>
 
-                {/* Rol */}
-                <div className="grid gap-2">
-                  <Label htmlFor="Rol">Rol</Label>
-                  <Input id="Rol" name="Rol" value={formData.Rol} onChange={handleChange} />
-                </div>
+              {/* Rol */}
+              <div className="grid gap-2">
+                <Label htmlFor="Rol">Rol</Label>
+                <Input id="Rol" name="Rol" value={formData.Rol} onChange={handleChange} />
+              </div>
 
-                {/* Tipo de Pago */}
-                <div className="grid gap-2">
-                  <Label htmlFor="tipoPago">Tipo de Pago</Label>
-                  <Select value={formData.tipoPago} onValueChange={(value) => handleSelectChange("tipoPago", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar tipo de pago" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="E">Efectivo</SelectItem>
-                      <SelectItem value="C">Comprobante</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* tipoPago */}
+              <div className="grid gap-2">
+                <Label htmlFor="tipoPago">Tipo de Pago</Label>
+                <Select value={formData.tipoPago} onValueChange={(value) => handleSelectChange("tipoPago", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo de pago" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="E">Efectivo</SelectItem>
+                    <SelectItem value="C">Comprobante</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Boleta */}
-                <div className="grid gap-2">
-                  <Label htmlFor="boleta">Boleta</Label>
-                  <Input id="boleta" name="boleta" value={formData.boleta} onChange={handleChange} />
-                </div>
+              {/* boleta */}
+              <div className="grid gap-2">
+                <Label htmlFor="boleta">Boleta</Label>
+                <Input id="boleta" name="boleta" value={formData.boleta} onChange={handleChange} />
+              </div>
 
-                {/* Certificado Enviado - Slider */}
-                <div className="grid gap-2">
-                  <Label htmlFor="certificadoEnviado">Certificado Enviado</Label>
-                  <Slider
-                    value={[formData.certificadoEnviado]}
-                    min={0}
-                    max={100}
-                    step={1}
-                    onValueChange={(value) => handleSliderChange("certificadoEnviado", value[0])}
-                  >
-                    <SliderTrack>
-                      <SliderRange />
-                    </SliderTrack>
-                    <SliderThumb />
-                  </Slider>
-                  <div>{formData.certificadoEnviado}%</div>
-                </div>
+              {/* certificadoEnviado */}
+              <div className="grid gap-2">
+                <Label htmlFor="certificadoEnviado">Certificado Enviado</Label>
+                <Input id="certificadoEnviado" name="certificadoEnviado" value={formData.certificadoEnviado} onChange={handleChange} />
               </div>
             </div>
-            <DrawerFooter>
+
+            <DrawerFooter className="mt-4">
               <Button type="submit">Guardar Cambios</Button>
               <DrawerClose asChild>
                 <Button variant="outline">Cancelar</Button>
