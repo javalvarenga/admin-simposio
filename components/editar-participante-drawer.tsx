@@ -17,17 +17,25 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+// Añadir un nuevo tipo de datos para representar el participante
 interface Participante {
   id: string
+  tipoParticipante: "E" | "C" | "I"
   nombre: string
-  email: string
-  tipo: string
-  estadoPago: string
-  tipoPago: string
-  fechaRegistro: string
-  telefono: string
+  carnetCarrera: number
+  carnetAnio: number
+  carnetSerie: number
+  correoElectronico: string
+  telefono: number
+  talla: "S" | "M" | "L" | "XL"
+  fechaNacimiento: string
   institucion: string
-  boletaUrl: string
+  Rol: string
+  codigoQR: string
+  certificadoEnviado: number
+  tipoPago: "E" | "C"
+  boleta: string
+  estadoPago: "V" | "P" | "R"
 }
 
 interface EditarParticipanteDrawerProps {
@@ -65,14 +73,44 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
           <form onSubmit={handleSubmit}>
             <div className="p-4 pb-0">
               <div className="grid gap-4">
+                {/* Campos para editar los datos del participante */}
+                <div className="grid gap-2">
+                  <Label htmlFor="tipoParticipante">Tipo de Participante</Label>
+                  <Select value={formData.tipoParticipante} onValueChange={(value) => handleSelectChange("tipoParticipante", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="E">Estudiante</SelectItem>
+                      <SelectItem value="C">Catedrático</SelectItem>
+                      <SelectItem value="I">Invitado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="nombre">Nombre</Label>
                   <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
+                  <Label htmlFor="carnetCarrera">Carnet Carrera</Label>
+                  <Input id="carnetCarrera" name="carnetCarrera" value={formData.carnetCarrera} onChange={handleChange} />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="carnetAnio">Carnet Año</Label>
+                  <Input id="carnetAnio" name="carnetAnio" value={formData.carnetAnio} onChange={handleChange} />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="carnetSerie">Carnet Serie</Label>
+                  <Input id="carnetSerie" name="carnetSerie" value={formData.carnetSerie} onChange={handleChange} />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="correoElectronico">Correo Electrónico</Label>
+                  <Input id="correoElectronico" name="correoElectronico" type="email" value={formData.correoElectronico} onChange={handleChange} />
                 </div>
 
                 <div className="grid gap-2">
@@ -81,40 +119,43 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
                 </div>
 
                 <div className="grid gap-2">
+                  <Label htmlFor="talla">Talla</Label>
+                  <Select value={formData.talla} onValueChange={(value) => handleSelectChange("talla", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar talla" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="S">S</SelectItem>
+                      <SelectItem value="M">M</SelectItem>
+                      <SelectItem value="L">L</SelectItem>
+                      <SelectItem value="XL">XL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
+                  <Input id="fechaNacimiento" name="fechaNacimiento" type="date" value={formData.fechaNacimiento} onChange={handleChange} />
+                </div>
+
+                <div className="grid gap-2">
                   <Label htmlFor="institucion">Institución</Label>
                   <Input id="institucion" name="institucion" value={formData.institucion} onChange={handleChange} />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="tipo">Tipo de Participante</Label>
-                  <Select value={formData.tipo} onValueChange={(value) => handleSelectChange("tipo", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Estudiante">Estudiante</SelectItem>
-                      <SelectItem value="Catedrático">Catedrático</SelectItem>
-                      <SelectItem value="Invitado">Invitado</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="Rol">Rol</Label>
+                  <Input id="Rol" name="Rol" value={formData.Rol} onChange={handleChange} />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="estadoPago">Estado de Pago</Label>
-                  <Select
-                    value={formData.estadoPago}
-                    onValueChange={(value) => handleSelectChange("estadoPago", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Pendiente de Pago">Pendiente de Pago</SelectItem>
-                      <SelectItem value="Verificacion pendiente">Verificacion pendiente</SelectItem>
-                      <SelectItem value="Pagado">Pagado</SelectItem>
-                      <SelectItem value="Rechazado">Rechazado</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="codigoQR">Código QR</Label>
+                  <Input id="codigoQR" name="codigoQR" value={formData.codigoQR} onChange={handleChange} />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="certificadoEnviado">Certificado Enviado</Label>
+                  <Input id="certificadoEnviado" name="certificadoEnviado" value={formData.certificadoEnviado} onChange={handleChange} />
                 </div>
 
                 <div className="grid gap-2">
@@ -124,8 +165,27 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
                       <SelectValue placeholder="Seleccionar tipo de pago" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Efectivo">Efectivo</SelectItem>
-                      <SelectItem value="Comprobante">Comprobante</SelectItem>
+                      <SelectItem value="E">Efectivo</SelectItem>
+                      <SelectItem value="C">Comprobante</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="boleta">Boleta</Label>
+                  <Input id="boleta" name="boleta" value={formData.boleta} onChange={handleChange} />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="estadoPago">Estado de Pago</Label>
+                  <Select value={formData.estadoPago} onValueChange={(value) => handleSelectChange("estadoPago", value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar estado de pago" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="V">Verificado</SelectItem>
+                      <SelectItem value="P">Pendiente</SelectItem>
+                      <SelectItem value="R">Rechazado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -143,4 +203,3 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
     </Drawer>
   )
 }
-
