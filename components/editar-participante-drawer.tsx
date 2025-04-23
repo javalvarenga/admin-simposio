@@ -144,11 +144,17 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
                 </Select>
               </div>
 
-              {/* fechaNacimiento */}
               <div className="grid gap-2">
-                <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
-                <Input id="fechaNacimiento" name="fechaNacimiento" type="date" value={formData.fechaNacimiento} onChange={handleChange} />
-              </div>
+              <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
+              <Input 
+                id="fechaNacimiento" 
+                name="fechaNacimiento" 
+                type="date" 
+                value={formData.fechaNacimiento} 
+                                   onChange={handleChange} 
+                      className="cursor-pointer"
+                    />
+                  </div>
 
               {/* institucion */}
               <div className="grid gap-2">
