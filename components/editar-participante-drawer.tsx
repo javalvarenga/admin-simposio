@@ -48,20 +48,29 @@ export function EditarParticipanteDrawer({
   const [openCalendar, setOpenCalendar] = useState(false)
   const datePickerRef = useRef<any>(null)
 
+  // Función para manejar el cambio de fecha en el DatePicker
+  const handleDateChange = (date: Date | null) => {
+    setFecha(date) // Actualizamos la fecha seleccionada
+    setOpenCalendar(false) // Cerramos el calendario al seleccionar una fecha
+  }
+
+  // Función para manejar los cambios de los campos del formulario
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Función para manejar el cambio de selección en los selects
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Función para manejar el envío del formulario
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const updatedData = {
       ...formData,
-      fechaNacimiento: fecha?.toISOString().split("T")[0] || formData.fechaNacimiento,
+      fechaNacimiento: fecha?.toISOString().split("T")[0] || formData.fechaNacimiento, // Convertimos la fecha a formato ISO
     }
     onSave(updatedData)
   }
@@ -171,31 +180,32 @@ export function EditarParticipanteDrawer({
                   </SelectContent>
                 </Select>
               </div>
-      {/* fechaNacimiento */}
-      <div className="grid gap-2">
-        <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
-        <div className="relative">
-          <DatePicker
-            ref={datePickerRef}
-            selected={fecha} // Aquí no habrá null, siempre tendrá una fecha válida
-            onChange={handleChange}
-            open={openCalendar}
-            onClickOutside={() => setOpenCalendar(false)}
-            dateFormat="yyyy-MM-dd"
-            className="w-full border rounded-md p-2 pr-10"
-            placeholderText="Selecciona una fecha"
-            showMonthDropdown
-            showYearDropdown
-            dropdownMode="select"
-            readOnly
-          />
-          <CalendarIcon
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-            size={20}
-            onClick={() => setOpenCalendar((prev) => !prev)}
-          />
-        </div>
-      </div>
+
+              {/* fechaNacimiento */}
+              <div className="grid gap-2">
+                <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
+                <div className="relative">
+                  <DatePicker
+                    ref={datePickerRef}
+                    selected={fecha} // Aquí no será null, siempre tendrá un valor Date o null
+                    onChange={handleDateChange} // La función 'handleDateChange' ahora espera un tipo Date o null
+                    open={openCalendar}
+                    onClickOutside={() => setOpenCalendar(false)}
+                    dateFormat="yyyy-MM-dd"
+                    className="w-full border rounded-md p-2 pr-10"
+                    placeholderText="Selecciona una fecha"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    readOnly
+                  />
+                  <CalendarIcon
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+                    size={20}
+                    onClick={() => setOpenCalendar((prev) => !prev)}
+                  />
+                </div>
+              </div>
 
               {/* institucion */}
               <div className="grid gap-2">
