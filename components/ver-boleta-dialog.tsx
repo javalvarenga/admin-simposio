@@ -24,7 +24,7 @@ export function VerBoletaDialog({
   participante,
 }: VerBoletaDialogProps) {
   // Detecta si la boleta es un PDF o una imagen según la extensión
-  const esPDF = participante.boleta?.endsWith(".pdf")
+  const esPDF = typeof participante.boleta === 'string' && participante.boleta.endsWith(".pdf")
   
   // Función para descargar la boleta
   const handleDescargarBoleta = () => {
