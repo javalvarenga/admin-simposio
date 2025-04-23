@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CalendarIcon } from "lucide-react" // <- Icono de calendario
 
 interface Participante {
   tipoParticipante: string
@@ -61,14 +62,14 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
       <DrawerContent className="z-50">
-        <div className="mx-auto w-full max-w-sm h-[85vh] overflow-visible">
+        <div className="mx-auto w-full max-w-sm h-[85vh] overflow-y-auto px-4">
           <DrawerHeader>
             <DrawerTitle>Editar Participante</DrawerTitle>
             <DrawerDescription>Actualice la información del participante</DrawerDescription>
           </DrawerHeader>
 
           <form onSubmit={handleSubmit}>
-            <div className="p-4 pt-0 grid gap-4">
+            <div className="pb-4 grid gap-4">
               {/* tipoParticipante */}
               <div className="grid gap-2">
                 <Label htmlFor="tipoParticipante">Tipo de Participante</Label>
@@ -94,29 +95,11 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
               <div className="grid gap-2">
                 <Label>Carnet</Label>
                 <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    name="carnetCarrera"
-                    placeholder="Carrera"
-                    value={formData.carnetCarrera}
-                    onChange={handleChange}
-                  />
+                  <Input type="number" name="carnetCarrera" placeholder="Carrera" value={formData.carnetCarrera} onChange={handleChange} />
                   <span className="self-center">-</span>
-                  <Input
-                    type="number"
-                    name="carnetAnio"
-                    placeholder="Año"
-                    value={formData.carnetAnio}
-                    onChange={handleChange}
-                  />
+                  <Input type="number" name="carnetAnio" placeholder="Año" value={formData.carnetAnio} onChange={handleChange} />
                   <span className="self-center">-</span>
-                  <Input
-                    type="number"
-                    name="carnetSerie"
-                    placeholder="Serie"
-                    value={formData.carnetSerie}
-                    onChange={handleChange}
-                  />
+                  <Input type="number" name="carnetSerie" placeholder="Serie" value={formData.carnetSerie} onChange={handleChange} />
                 </div>
               </div>
 
@@ -148,19 +131,22 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
                 </Select>
               </div>
 
-              {/* fechaNacimiento con calendario */}
+              {/* fechaNacimiento con calendario e ícono */}
               <div className="grid gap-2">
                 <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
-                <DatePicker
-                  selected={fecha}
-                  onChange={(date: Date | null) => setFecha(date)}
-                  dateFormat="yyyy-MM-dd"
-                  className="w-full border rounded-md p-2"
-                  placeholderText="Selecciona una fecha"
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                />
+                <div className="relative">
+                  <DatePicker
+                    selected={fecha}
+                    onChange={(date: Date | null) => setFecha(date)}
+                    dateFormat="yyyy-MM-dd"
+                    className="w-full border rounded-md p-2 pr-10"
+                    placeholderText="Selecciona una fecha"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                  <CalendarIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" size={20} />
+                </div>
               </div>
 
               {/* institucion */}
