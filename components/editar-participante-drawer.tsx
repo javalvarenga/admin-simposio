@@ -25,9 +25,6 @@ interface Participante {
   fechaNacimiento: string
   institucion: string
   Rol: string
-  tipoPago: string
-  boleta: string
-  certificadoEnviado: number
 }
 
 interface EditarParticipanteDrawerProps {
@@ -86,22 +83,37 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
                 <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} />
               </div>
 
-              {/* carnetCarrera */}
+              {/* carnetCarrera, carnetAnio, carnetSerie - Campo combinado */}
               <div className="grid gap-2">
-                <Label htmlFor="carnetCarrera">Carnet Carrera</Label>
-                <Input id="carnetCarrera" name="carnetCarrera" value={formData.carnetCarrera} onChange={handleChange} />
-              </div>
-
-              {/* carnetAnio */}
-              <div className="grid gap-2">
-                <Label htmlFor="carnetAnio">Carnet Año</Label>
-                <Input id="carnetAnio" name="carnetAnio" value={formData.carnetAnio} onChange={handleChange} />
-              </div>
-
-              {/* carnetSerie */}
-              <div className="grid gap-2">
-                <Label htmlFor="carnetSerie">Carnet Serie</Label>
-                <Input id="carnetSerie" name="carnetSerie" value={formData.carnetSerie} onChange={handleChange} />
+                <Label htmlFor="carnet">Carnet</Label>
+                <div className="flex space-x-2">
+                  <Input
+                    id="carnetCarrera"
+                    name="carnetCarrera"
+                    value={formData.carnetCarrera}
+                    onChange={handleChange}
+                    className="w-1/3"
+                    placeholder="Carrera"
+                  />
+                  <span>-</span>
+                  <Input
+                    id="carnetAnio"
+                    name="carnetAnio"
+                    value={formData.carnetAnio}
+                    onChange={handleChange}
+                    className="w-1/3"
+                    placeholder="Año"
+                  />
+                  <span>-</span>
+                  <Input
+                    id="carnetSerie"
+                    name="carnetSerie"
+                    value={formData.carnetSerie}
+                    onChange={handleChange}
+                    className="w-1/3"
+                    placeholder="Serie"
+                  />
+                </div>
               </div>
 
               {/* correoElectronico */}
@@ -148,32 +160,6 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
               <div className="grid gap-2">
                 <Label htmlFor="Rol">Rol</Label>
                 <Input id="Rol" name="Rol" value={formData.Rol} onChange={handleChange} />
-              </div>
-
-              {/* tipoPago */}
-              <div className="grid gap-2">
-                <Label htmlFor="tipoPago">Tipo de Pago</Label>
-                <Select value={formData.tipoPago} onValueChange={(value) => handleSelectChange("tipoPago", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar tipo de pago" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="E">Efectivo</SelectItem>
-                    <SelectItem value="C">Comprobante</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* boleta */}
-              <div className="grid gap-2">
-                <Label htmlFor="boleta">Boleta</Label>
-                <Input id="boleta" name="boleta" value={formData.boleta} onChange={handleChange} />
-              </div>
-
-              {/* certificadoEnviado */}
-              <div className="grid gap-2">
-                <Label htmlFor="certificadoEnviado">Certificado Enviado</Label>
-                <Input id="certificadoEnviado" name="certificadoEnviado" value={formData.certificadoEnviado} onChange={handleChange} />
               </div>
             </div>
 
