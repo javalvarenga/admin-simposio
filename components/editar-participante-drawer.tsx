@@ -171,35 +171,31 @@ export function EditarParticipanteDrawer({
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* fechaNacimiento */}
-              <div className="grid gap-2">
-                <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
-                <div className="relative">
-                  <DatePicker
-                    ref={datePickerRef}
-                    selected={fecha}
-                    onChange={(date: Date | null) => {
-                      setFecha(date)
-                      setOpenCalendar(false)
-                    }}
-                    open={openCalendar}
-                    onClickOutside={() => setOpenCalendar(false)}
-                    dateFormat="yyyy-MM-dd"
-                    className="w-full border rounded-md p-2 pr-10"
-                    placeholderText="Selecciona una fecha"
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                    readOnly
-                  />
-                  <CalendarIcon
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-                    size={20}
-                    onClick={() => setOpenCalendar((prev) => !prev)}
-                  />
-                </div>
-              </div>
+      {/* fechaNacimiento */}
+      <div className="grid gap-2">
+        <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
+        <div className="relative">
+          <DatePicker
+            ref={datePickerRef}
+            selected={fecha} // Aquí no habrá null, siempre tendrá una fecha válida
+            onChange={handleChange}
+            open={openCalendar}
+            onClickOutside={() => setOpenCalendar(false)}
+            dateFormat="yyyy-MM-dd"
+            className="w-full border rounded-md p-2 pr-10"
+            placeholderText="Selecciona una fecha"
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+            readOnly
+          />
+          <CalendarIcon
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+            size={20}
+            onClick={() => setOpenCalendar((prev) => !prev)}
+          />
+        </div>
+      </div>
 
               {/* institucion */}
               <div className="grid gap-2">
