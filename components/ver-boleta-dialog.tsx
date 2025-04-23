@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,6 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { Participante } from "./participantes-table"
 
@@ -20,28 +17,24 @@ interface VerBoletaDialogProps {
   isOpen: boolean
   onClose: () => void
   participante: Participante
-  onCambiarEstado: (id: number, nuevoEstado: string) => void
-  onCambiarTipoPago?: (id: number, nuevoTipo: string) => void
 }
 
 export function VerBoletaDialog({
   isOpen,
   onClose,
   participante,
-  onCambiarEstado,
-  onCambiarTipoPago,
 }: VerBoletaDialogProps) {
-  const [estadoSeleccionado, setEstadoSeleccionado] = useState(participante.estadoPago)
-  const [tipoPagoSeleccionado, setTipoPagoSeleccionado] = useState(participante.tipoPago)
+  // Detecta si la boleta es PDF según el prefijo base64
+  const esPDF = participante.boleta?.startsWith("JVBER")
 
-  const handleCambiarEstado = () => {
-    onCambiarEstado(participante.idParticipante, estadoSeleccionado)
-
-    if (onCambiarTipoPago && tipoPagoSeleccionado !== participante.tipoPago) {
-      onCambiarTipoPago(participante.idParticipante, tipoPagoSeleccionado)
-    }
-
-    onClose()
+  // Función para descargar el archivo de la boleta
+  const handleDescargarBoleta = () => {
+    const link = document.createElement("a")
+    link.href = esPDF
+      ? `data:application/pdf;base64,${participante.boleta}`
+      : `data:image/jpeg;base64,${participante.boleta}`
+    link.download = `boleta_${participante.idParticipante}`
+    link.click()
   }
 
   return (
@@ -51,9 +44,10 @@ export function VerBoletaDialog({
           <DialogTitle>Boleta de Pago</DialogTitle>
           <DialogDescription>Boleta subida por {participante.nombre}</DialogDescription>
         </DialogHeader>
+
         <div className="flex flex-col space-y-4">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Estado actual:</span>
+            <span className="font-medium">Estado de pago:</span>
             <Badge
               variant={
                 participante.estadoPago === "C"
@@ -69,66 +63,44 @@ export function VerBoletaDialog({
             </Badge>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="font-medium">Tipo de pago:</span>
-            <Badge variant={participante.tipoPago === "E" ? "outline" : "secondary"}>
-              {participante.tipoPago}
-            </Badge>
+          <div className="border rounded-md overflow-hidden max-h-[600px]">
+            {participante.boleta ? (
+              esPDF ? (
+                <iframe
+                  src={`data:application/pdf;base64,${participante.boleta}`}
+                  title="Boleta PDF"
+                  width="100%"
+                  height="600px"
+                  className="rounded"
+                />
+              ) : (
+                <img
+                  src={`data:image/jpeg;base64,${participante.boleta}`}
+                  alt="Boleta de pago"
+                  className="w-full h-auto object-contain"
+                />
+              )
+            ) : (
+              <p className="text-sm text-muted-foreground p-4 text-center">
+                No se ha subido ninguna boleta.
+              </p>
+            )}
           </div>
 
-          <div className="flex justify-between">
-            <span className="font-medium">Fecha de registro:</span>
-            <span>{participante.fechaRegistro}</span>
-          </div>
-
-          <div className="border rounded-md overflow-hidden">
-            <Image
-              src={participante?.boleta || "/placeholder.svg"}
-              alt="Boleta de pago"
-              width={400}
-              height={300}
-              className="w-full h-auto object-contain"
-            />
-          </div>
-
-          <div className="space-y-4 pt-4 border-t">
-            <div className="space-y-2">
-              <Label htmlFor="cambiar-estado">Cambiar estado de pago</Label>
-              <Select value={estadoSeleccionado} onValueChange={setEstadoSeleccionado}>
-                <SelectTrigger id="cambiar-estado">
-                  <SelectValue placeholder="Seleccionar estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pendiente de Pago">Pendiente de Pago</SelectItem>
-                  <SelectItem value="Verificacion pendiente">Verificacion pendiente</SelectItem>
-                  <SelectItem value="Pagado">Pagado</SelectItem>
-                  <SelectItem value="Rechazado">Rechazado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cambiar-tipo-pago">Cambiar tipo de pago</Label>
-              <Select value={tipoPagoSeleccionado} onValueChange={setTipoPagoSeleccionado}>
-                <SelectTrigger id="cambiar-tipo-pago">
-                  <SelectValue placeholder="Seleccionar tipo de pago" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Efectivo">Efectivo</SelectItem>
-                  <SelectItem value="Comprobante">Comprobante</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Botón de descarga */}
+          <div className="mt-4">
+            <Button variant="outline" onClick={handleDescargarBoleta}>
+              Descargar Boleta
+            </Button>
           </div>
         </div>
+
         <DialogFooter className="flex justify-between sm:justify-between">
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            Cerrar
           </Button>
-          <Button onClick={handleCambiarEstado}>Guardar Cambios</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
-
