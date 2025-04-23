@@ -1,4 +1,6 @@
 import { useState } from "react"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 import {
   Drawer,
   DrawerContent,
@@ -36,6 +38,7 @@ interface EditarParticipanteDrawerProps {
 
 export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave }: EditarParticipanteDrawerProps) {
   const [formData, setFormData] = useState<Participante>({ ...participante })
+  const [fecha, setFecha] = useState<Date | null>(new Date(participante.fechaNacimiento))
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -48,13 +51,17 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
+    const updatedData = {
+      ...formData,
+      fechaNacimiento: fecha?.toISOString().split("T")[0] || formData.fechaNacimiento,
+    }
+    onSave(updatedData)
   }
 
   return (
     <Drawer open={isOpen} onOpenChange={onClose}>
-      <DrawerContent>
-        <div className="mx-auto w-full max-w-sm h-[85vh] overflow-y-auto">
+      <DrawerContent className="z-50">
+        <div className="mx-auto w-full max-w-sm h-[85vh] overflow-visible">
           <DrawerHeader>
             <DrawerTitle>Editar Participante</DrawerTitle>
             <DrawerDescription>Actualice la información del participante</DrawerDescription>
@@ -83,35 +90,32 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
                 <Input id="nombre" name="nombre" value={formData.nombre} onChange={handleChange} />
               </div>
 
-              {/* carnetCarrera, carnetAnio, carnetSerie - Campo combinado */}
+              {/* carnet combinado */}
               <div className="grid gap-2">
-                <Label htmlFor="carnet">Carnet</Label>
-                <div className="flex space-x-2">
+                <Label>Carnet</Label>
+                <div className="flex gap-2">
                   <Input
-                    id="carnetCarrera"
+                    type="number"
                     name="carnetCarrera"
+                    placeholder="Carrera"
                     value={formData.carnetCarrera}
                     onChange={handleChange}
-                    className="w-1/3"
-                    placeholder="Carrera"
                   />
-                  <span>-</span>
+                  <span className="self-center">-</span>
                   <Input
-                    id="carnetAnio"
+                    type="number"
                     name="carnetAnio"
+                    placeholder="Año"
                     value={formData.carnetAnio}
                     onChange={handleChange}
-                    className="w-1/3"
-                    placeholder="Año"
                   />
-                  <span>-</span>
+                  <span className="self-center">-</span>
                   <Input
-                    id="carnetSerie"
+                    type="number"
                     name="carnetSerie"
+                    placeholder="Serie"
                     value={formData.carnetSerie}
                     onChange={handleChange}
-                    className="w-1/3"
-                    placeholder="Serie"
                   />
                 </div>
               </div>
@@ -144,17 +148,20 @@ export function EditarParticipanteDrawer({ isOpen, onClose, participante, onSave
                 </Select>
               </div>
 
+              {/* fechaNacimiento con calendario */}
               <div className="grid gap-2">
-              <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
-              <Input 
-                id="fechaNacimiento" 
-                name="fechaNacimiento" 
-                type="date" 
-                value={formData.fechaNacimiento} 
-                                   onChange={handleChange} 
-                      className="cursor-pointer"
-                    />
-                  </div>
+                <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
+                <DatePicker
+                  selected={fecha}
+                  onChange={(date: Date | null) => setFecha(date)}
+                  dateFormat="yyyy-MM-dd"
+                  className="w-full border rounded-md p-2"
+                  placeholderText="Selecciona una fecha"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
 
               {/* institucion */}
               <div className="grid gap-2">
