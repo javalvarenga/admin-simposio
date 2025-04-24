@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   Dialog,
@@ -7,15 +7,15 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { useState } from "react"
-import { Participante } from "./participantes-table"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { Participante } from "./participantes-table";
 
 interface VerBoletaDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  participante: Participante
+  isOpen: boolean;
+  onClose: () => void;
+  participante: Participante;
 }
 
 export function VerBoletaDialog({
@@ -23,23 +23,36 @@ export function VerBoletaDialog({
   onClose,
   participante,
 }: VerBoletaDialogProps) {
-  // Detecta si la boleta es un PDF o una imagen según la extensión
-  const esPDF = typeof participante.boleta === 'string' && participante.boleta.endsWith(".pdf")
-  
-  // Función para descargar la boleta
+  // Detecta si es PDF
+  const esPDF = participante.boleta?.startsWith("data:application/pdf") ||
+                participante.boleta?.endsWith(".pdf");
+
+  // Genera un src válido a partir de base64 o una URL con prefijo
+  const generarSrc = (boleta: string) => {
+    if (!boleta.startsWith("data:")) {
+      return esPDF
+        ? `data:application/pdf;base64,${boleta}`
+        : `data:image/png;base64,${boleta}`; // ajusta a "jpeg" si tus imágenes son JPEG
+    }
+    return boleta;
+  };
+
+  // Descargar la boleta
   const handleDescargarBoleta = () => {
-    const link = document.createElement("a")
-    link.href = participante.boleta
-    link.download = `boleta_${participante.idParticipante}` // Nombre del archivo para la descarga
-    link.click()
-  }
+    const link = document.createElement("a");
+    link.href = generarSrc(participante.boleta);
+    link.download = `boleta_${participante.idParticipante}${esPDF ? ".pdf" : ".png"}`;
+    link.click();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Boleta de Pago</DialogTitle>
-          <DialogDescription>Boleta subida por {participante.nombre}</DialogDescription>
+          <DialogDescription>
+            Boleta subida por {participante.nombre}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col space-y-4">
@@ -52,7 +65,7 @@ export function VerBoletaDialog({
             {participante.boleta ? (
               esPDF ? (
                 <iframe
-                  src={participante.boleta}
+                  src={generarSrc(participante.boleta)}
                   title="Boleta PDF"
                   width="100%"
                   height="600px"
@@ -60,7 +73,7 @@ export function VerBoletaDialog({
                 />
               ) : (
                 <img
-                  src={participante.boleta}
+                  src={generarSrc(participante.boleta)}
                   alt="Boleta de pago"
                   className="w-full h-auto object-contain"
                 />
@@ -72,7 +85,6 @@ export function VerBoletaDialog({
             )}
           </div>
 
-          {/* Botón de descarga */}
           <div className="mt-4">
             <Button variant="outline" onClick={handleDescargarBoleta}>
               Descargar Boleta
@@ -87,5 +99,5 @@ export function VerBoletaDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
