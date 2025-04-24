@@ -37,11 +37,13 @@ import {
   Eye,
   Edit,
   Trash2,
+  FileText ,
   CreditCard,
 } from "lucide-react";
 import { useGetAllParticipants } from "@/hooks/Participants/useGetAllParticipants";
 import { changePaymmentStatus } from "@/services/Participants";
 import { changeKitStatus } from "@/services/Participants";
+import { changeCertStatus } from "@/services/Participants";
 
 // Tipos para los participantes
 type TipoParticipante = "E" | "C" | "I";
@@ -51,6 +53,8 @@ type EstadoPago = "P" | "C" | "R" | "V";
 type TipoPago = "E" | "D";
 
 type estadoKit = 0 | 1;
+
+type estadoCert = 0 | 1;
 
 export interface Participante {
   idParticipante: number;
@@ -67,7 +71,7 @@ export interface Participante {
   institucion: string;
   Rol: string;
   codigoQR: string;
-  certificadoEnviado: boolean; // tinyint lo puedes mapear a boolean en TS
+  certificadoEnviado: number; // tinyint lo puedes mapear a boolean en TS
   kit: number; // tinyint lo puedes mapear a boolean en TS
   estadoPago: EstadoPago;
   tipoPago: TipoPago;
@@ -180,6 +184,26 @@ export function ParticipantesTable() {
       sweetAlert(
         "Estado del kit actualizado",
         "El estado del kit fue cambiado correctamente",
+        "success",
+        5000
+      );
+    };
+
+
+    // Función para cambiar el estado del kit
+    const cambiarEstadoCert = async (id: number, nuevoEstado: estadoCert) => {
+      setParticipantes(
+        participantes.map((p) =>
+          p.idParticipante === id ? { ...p, certificadoEnviado: nuevoEstado } : p
+        )
+      );
+  
+      const result = await changeCertStatus(id, nuevoEstado);
+      console.log("result of changeCertStatus", result);
+  
+      sweetAlert(
+        "Estado del certificado actualizado",
+        "El estado del certificado fue cambiado correctamente",
         "success",
         5000
       );
@@ -585,7 +609,9 @@ export function ParticipantesTable() {
                   </TableCell>
                   <TableCell>{formatDate(participante.fechaRegistro)}</TableCell>
                   <TableCell>
-                    {participante.certificadoEnviado ? "Sí" : "No"}
+                    <Badge variant={participante.certificadoEnviado ? "success" : "destructive"}>
+                      {participante.certificadoEnviado ? "Sí" : "No"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                   <Badge variant={participante.kit ? "success" : "destructive"}>
@@ -672,6 +698,21 @@ export function ParticipantesTable() {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
                 No entregado
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title="Cambiar estado del certificado">
+                <FileText className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => cambiarEstadoCert(participante.idParticipante, 1)}>
+                Enviado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cambiarEstadoCert(participante.idParticipante, 0)}>
+                No enviado
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -51,9 +51,10 @@ export function VerBoletaDialog({
           <DialogTitle>Boleta de Pago</DialogTitle>
           <DialogDescription>Boleta subida por {participante.nombre}</DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col space-y-4">
+        
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Estado actual:</span>
+            <Label>Estado actual:</Label>
             <Badge
               variant={
                 participante.estadoPago === "C"
@@ -65,70 +66,52 @@ export function VerBoletaDialog({
                       : "destructive"
               }
             >
-              {participante.estadoPago}
+              {participante.estadoPago === "C"
+                ? "Pagado"
+                : participante.estadoPago === "V"
+                  ? "Verificación"
+                  : participante.estadoPago === "P"
+                    ? "Pendiente"
+                    : "Rechazado"}
             </Badge>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="font-medium">Tipo de pago:</span>
+            <Label>Tipo de pago:</Label>
             <Badge variant={participante.tipoPago === "E" ? "outline" : "secondary"}>
-              {participante.tipoPago}
+              {participante.tipoPago === "E" ? "Efectivo" : "Depósito"}
             </Badge>
           </div>
 
           <div className="flex justify-between">
-            <span className="font-medium">Fecha de registro:</span>
-            <span>{participante.fechaRegistro}</span>
+            <Label>Fecha de registro:</Label>
+            <span>{new Date(participante.fechaRegistro).toLocaleDateString()}</span>
           </div>
 
-          <div className="border rounded-md overflow-hidden">
-            <Image
-              src={participante?.boleta || "/placeholder.svg"}
-              alt="Boleta de pago"
-              width={400}
-              height={300}
-              className="w-full h-auto object-contain"
-            />
-          </div>
-
-          <div className="space-y-4 pt-4 border-t">
-            <div className="space-y-2">
-              <Label htmlFor="cambiar-estado">Cambiar estado de pago</Label>
-              <Select value={estadoSeleccionado} onValueChange={setEstadoSeleccionado}>
-                <SelectTrigger id="cambiar-estado">
-                  <SelectValue placeholder="Seleccionar estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pendiente de Pago">Pendiente de Pago</SelectItem>
-                  <SelectItem value="Verificacion pendiente">Verificacion pendiente</SelectItem>
-                  <SelectItem value="Pagado">Pagado</SelectItem>
-                  <SelectItem value="Rechazado">Rechazado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cambiar-tipo-pago">Cambiar tipo de pago</Label>
-              <Select value={tipoPagoSeleccionado} onValueChange={setTipoPagoSeleccionado}>
-                <SelectTrigger id="cambiar-tipo-pago">
-                  <SelectValue placeholder="Seleccionar tipo de pago" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Efectivo">Efectivo</SelectItem>
-                  <SelectItem value="Comprobante">Comprobante</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {participante.boleta && (
+            <>
+              <div className="border-t pt-4">
+                <Label>Boleta de pago</Label>
+              </div>
+              <div className="border rounded-md overflow-hidden">
+                <Image
+                  src={participante.boleta || "/placeholder.svg"}
+                  alt="Boleta de pago"
+                  width={400}
+                  height={300}
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+            </>
+          )}
         </div>
+
         <DialogFooter className="flex justify-between sm:justify-between">
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            Cerrar
           </Button>
-          <Button onClick={handleCambiarEstado}>Guardar Cambios</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
-

@@ -13,3 +13,9 @@ export function changeKitStatus(participantId: number, newStatus: number) {
     kit: newStatus,
   });
 }
+
+export function changeCertStatus(participantId: number, newStatus: number) {
+  return api.patch(`/participants/updateCertStatus/${participantId}`, {
+    certificadoEnviado: newStatus,
+  });
+}
