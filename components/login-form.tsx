@@ -22,7 +22,7 @@ export function LoginForm() {
     const password = formData.get("password") as string;
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/administrators/login', {
+      const response = await axios.post('http://localhost:8080/api/v1/administrators', {
         username,
         password
       });
