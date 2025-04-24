@@ -1,38 +1,41 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from 'axios';
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
+    setError(null); // Reset error message
 
     const formData = new FormData(event.currentTarget);
     const username = formData.get("username") as string;
     const password = formData.get("password") as string;
 
-    // Simulación de autenticación
-    // En un caso real, esto sería una llamada a una API
     try {
-      // Simulamos un delay para la autenticación
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Realizamos la solicitud POST al backend para autenticar al administrador
+      const response = await axios.post('http://localhost:8080/api/v1/administrators/login', {
+        username,
+        password
+      });
 
-      // Credenciales de prueba: admin/admin
-      if (username === "admin" && password === "admin") {
+      if (response.status === 200) {
+        // Si el login es exitoso, redirigimos al dashboard
         router.push("/dashboard");
-      } else {
-        throw new Error("Credenciales incorrectas");
       }
-    } catch (error) {
+    } catch (error: any) {
+      setError("Credenciales incorrectas o error al intentar iniciar sesión.");
+      console.error("Error de autenticación:", error);
     } finally {
       setIsLoading(false);
     }
@@ -59,6 +62,10 @@ export function LoginForm() {
           required
         />
       </div>
+
+      {/* Mostrar mensaje de error si las credenciales son incorrectas */}
+      {error && <p className="text-red-500">{error}</p>}
+
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
       </Button>
