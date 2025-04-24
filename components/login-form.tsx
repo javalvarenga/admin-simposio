@@ -1,12 +1,11 @@
 "use client";
 
-import type React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import axios from 'axios';
+import axios from "axios";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,15 +22,17 @@ export function LoginForm() {
     const password = formData.get("password") as string;
 
     try {
-      // Realizamos la solicitud POST al backend para autenticar al administrador
       const response = await axios.post('http://localhost:8080/api/v1/administrators/login', {
         username,
         password
       });
 
+      // Verifica la respuesta del backend
+      console.log(response);
+
       if (response.status === 200) {
-        // Si el login es exitoso, redirigimos al dashboard
-        router.push("/dashboard");
+        console.log("Login exitoso, redirigiendo...");
+        router.push("/dashboard");  // Si la respuesta es 200, redirige
       }
     } catch (error: any) {
       setError("Credenciales incorrectas o error al intentar iniciar sesión.");
@@ -63,8 +64,7 @@ export function LoginForm() {
         />
       </div>
 
-      {/* Mostrar mensaje de error si las credenciales son incorrectas */}
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-red-500">{error}</p>} {/* Muestra el error si existe */}
 
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
