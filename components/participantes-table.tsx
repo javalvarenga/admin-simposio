@@ -42,7 +42,9 @@ import {
 import { useGetAllParticipants } from "@/hooks/Participants/useGetAllParticipants";
 import { changePaymmentStatus } from "@/services/Participants";
 import { changeKitStatus } from "@/services/Participants";
-
+import { KitEntregadoIcon, KitNoEntregadoIcon } from "@/components/ui/icons"; // Asegúrate de importar los íconos correctos
+import { deleteParticipant } from "@/services/Participants"; // Asegúrate de importar la función de eliminación
+import { updateParticipant } from "@/services/Participants"; // Asegúrate de importar la función de actualización
 // Tipos para los participantes
 type TipoParticipante = "E" | "C" | "I";
 // Actualizar el tipo EstadoPago
@@ -195,23 +197,72 @@ export function ParticipantesTable() {
     );
   };
 
-  // Función para actualizar un participante
-  const actualizarParticipante = (participanteActualizado: Participante) => {
-    setParticipantes(
-      participantes.map((p) =>
-        p.idParticipante === participanteActualizado.idParticipante
-          ? participanteActualizado
-          : p
-      )
-    );
-    setIsEditOpen(false);
+  const actualizarParticipante = async (participanteActualizado: Participante) => {
+    try {
+      const response = await updateParticipant(
+        participanteActualizado.idParticipante,
+        participanteActualizado
+      );
+  
+      const result = response.data; // ← Aquí extraes solo los datos
+  
+      setParticipantes(
+        participantes.map((p) =>
+          p.idParticipante === participanteActualizado.idParticipante
+            ? result
+            : p
+        )
+      );
+  
+      sweetAlert(
+        "Participante actualizado",
+        "Los datos del participante fueron actualizados correctamente.",
+        "success",
+        5000
+      );
+  
+      setIsEditOpen(false);
+    } catch (error) {
+      console.error("Error al actualizar participante:", error);
+      sweetAlert(
+        "Error",
+        "Ocurrió un error al actualizar el participante.",
+        "error",
+        5000
+      );
+    }
   };
+  
 
-  // Función para eliminar un participante
-  const eliminarParticipante = (id: number) => {
+
+// Función para eliminar un participante
+const eliminarParticipante = async (id: number) => {
+  try {
+    // Llamada al backend
+    const result = await deleteParticipant(id);
+    console.log("Participante eliminado:", result);
+
+    // Actualización en el frontend
     setParticipantes(participantes?.filter((p) => p.idParticipante !== id));
     setIsDeleteOpen(false);
-  };
+
+    sweetAlert(
+      "Participante eliminado",
+      "El participante fue eliminado correctamente.",
+      "success",
+      5000
+    );
+  } catch (error) {
+    console.error("Error al eliminar participante:", error);
+    sweetAlert(
+      "Error",
+      "No se pudo eliminar el participante.",
+      "error",
+      5000
+    );
+  }
+};
+
 
   // Función para formatear la fecha
   const formatDate = (isoString: string): string => {
@@ -659,22 +710,26 @@ export function ParticipantesTable() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      
                       <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" title="Cambiar estado del kit">
-                <CreditCard className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
-                Entregado
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
-                No entregado
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" title="Cambiar estado del kit">
+                            {participante.kit === 1 ? (
+                              <KitEntregadoIcon /> // Ícono verde si está entregado
+                            ) : (
+                              <KitNoEntregadoIcon /> // Ícono rojo si no está entregado
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
+                            Entregado
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
+                            No entregado
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         variant="outline"
                         size="icon"
@@ -734,7 +789,7 @@ export function ParticipantesTable() {
           isOpen={isDeleteOpen}
           onClose={() => setIsDeleteOpen(false)}
           participante={selectedParticipante}
-          onConfirm={() => eliminarParticipante(selectedParticipante.id)}
+          onConfirm={() => eliminarParticipante(selectedParticipante.idParticipante)}
         />
       )}
     </>

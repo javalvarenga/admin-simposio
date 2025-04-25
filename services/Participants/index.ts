@@ -13,3 +13,11 @@ export function changeKitStatus(participantId: number, newStatus: number) {
     kit: newStatus,
   });
 }
+
+export function deleteParticipant(participantId: number) {
+  return api.delete(`/participants/${participantId}`);
+}
+
+export function updateParticipant(participantId: number, updatedData: any) {
+  return api.put(`/participants/${participantId}`, updatedData);
+}

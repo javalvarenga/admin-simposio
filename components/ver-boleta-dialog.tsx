@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import Image from "next/image"
+import { useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,127 +8,114 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { useState } from "react"
-import { Participante } from "./participantes-table"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Participante } from "./participantes-table";
+
+// Genera el src para <img> o <iframe> según el tipo de boleta
+function generarSrc(boleta: string | { type: string; data: number[] }) {
+  if (typeof boleta === "string") {
+    if (boleta.startsWith("data:")) {
+      return boleta;
+    }
+
+    // Detecta si probablemente es PDF por la codificación (comienza con "JVBER")
+    const probablePDF = boleta.slice(0, 10).includes("JVBER") || boleta.includes("base64,aVZCT1J3");
+    return probablePDF
+      ? `data:application/pdf;base64,${boleta}`
+      : `data:image/png;base64,${boleta}`; // Cambia a image/jpeg si usás JPG
+  } else if (boleta && boleta.data && Array.isArray(boleta.data)) {
+    const byteArray = new Uint8Array(boleta.data);
+    const base64String = btoa(String.fromCharCode(...byteArray));
+    return `data:application/pdf;base64,${base64String}`;
+  }
+
+  return "";
+}
 
 interface VerBoletaDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  participante: Participante
-  onCambiarEstado: (id: number, nuevoEstado: string) => void
-  onCambiarTipoPago?: (id: number, nuevoTipo: string) => void
+  isOpen: boolean;
+  onClose: () => void;
+  participante: Participante;
 }
 
 export function VerBoletaDialog({
   isOpen,
   onClose,
   participante,
-  onCambiarEstado,
-  onCambiarTipoPago,
 }: VerBoletaDialogProps) {
-  const [estadoSeleccionado, setEstadoSeleccionado] = useState(participante.estadoPago)
-  const [tipoPagoSeleccionado, setTipoPagoSeleccionado] = useState(participante.tipoPago)
+  const srcBoleta = useMemo(() => generarSrc(participante.boleta), [participante.boleta]);
 
-  const handleCambiarEstado = () => {
-    onCambiarEstado(participante.idParticipante, estadoSeleccionado)
+  const esPDF = useMemo(() => {
+    return srcBoleta.startsWith("data:application/pdf");
+  }, [srcBoleta]);
 
-    if (onCambiarTipoPago && tipoPagoSeleccionado !== participante.tipoPago) {
-      onCambiarTipoPago(participante.idParticipante, tipoPagoSeleccionado)
+  useEffect(() => {
+    if (srcBoleta) {
+      console.log("Base64 generado para boleta:", srcBoleta);
     }
+  }, [srcBoleta]);
 
-    onClose()
-  }
+  const handleDescargarBoleta = () => {
+    const link = document.createElement("a");
+    link.href = srcBoleta;
+    link.download = `boleta_${participante.idParticipante}${esPDF ? ".pdf" : ".png"}`;
+    link.click();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Boleta de Pago</DialogTitle>
-          <DialogDescription>Boleta subida por {participante.nombre}</DialogDescription>
+          <DialogDescription>
+            Boleta subida por {participante.nombre}
+          </DialogDescription>
         </DialogHeader>
+
         <div className="flex flex-col space-y-4">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Estado actual:</span>
-            <Badge
-              variant={
-                participante.estadoPago === "C"
-                  ? "success"
-                  : participante.estadoPago === "V"
-                    ? "warning"
-                    : participante.estadoPago === "P"
-                      ? "default"
-                      : "destructive"
-              }
-            >
-              {participante.estadoPago}
-            </Badge>
+            <span className="font-medium">Estado de pago:</span>
+            <span>{participante.estadoPago}</span>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="font-medium">Tipo de pago:</span>
-            <Badge variant={participante.tipoPago === "E" ? "outline" : "secondary"}>
-              {participante.tipoPago}
-            </Badge>
+          <div className="border rounded-md overflow-hidden max-h-[600px]">
+            {srcBoleta ? (
+              esPDF ? (
+                <iframe
+                  src={srcBoleta}
+                  title="Boleta PDF"
+                  width="100%"
+                  height="600px"
+                  className="rounded"
+                />
+              ) : (
+                <img
+                  src={srcBoleta}
+                  alt="Boleta de pago"
+                  className="w-full h-auto object-contain"
+                />
+              )
+            ) : (
+              <p className="text-sm text-muted-foreground p-4 text-center">
+                No se ha subido ninguna boleta.
+              </p>
+            )}
           </div>
 
-          <div className="flex justify-between">
-            <span className="font-medium">Fecha de registro:</span>
-            <span>{participante.fechaRegistro}</span>
-          </div>
-
-          <div className="border rounded-md overflow-hidden">
-            <Image
-              src={participante?.boleta || "/placeholder.svg"}
-              alt="Boleta de pago"
-              width={400}
-              height={300}
-              className="w-full h-auto object-contain"
-            />
-          </div>
-
-          <div className="space-y-4 pt-4 border-t">
-            <div className="space-y-2">
-              <Label htmlFor="cambiar-estado">Cambiar estado de pago</Label>
-              <Select value={estadoSeleccionado} onValueChange={setEstadoSeleccionado}>
-                <SelectTrigger id="cambiar-estado">
-                  <SelectValue placeholder="Seleccionar estado" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pendiente de Pago">Pendiente de Pago</SelectItem>
-                  <SelectItem value="Verificacion pendiente">Verificacion pendiente</SelectItem>
-                  <SelectItem value="Pagado">Pagado</SelectItem>
-                  <SelectItem value="Rechazado">Rechazado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cambiar-tipo-pago">Cambiar tipo de pago</Label>
-              <Select value={tipoPagoSeleccionado} onValueChange={setTipoPagoSeleccionado}>
-                <SelectTrigger id="cambiar-tipo-pago">
-                  <SelectValue placeholder="Seleccionar tipo de pago" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Efectivo">Efectivo</SelectItem>
-                  <SelectItem value="Comprobante">Comprobante</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="mt-4">
+            <Button variant="outline" onClick={handleDescargarBoleta}>
+              Descargar Boleta
+            </Button>
           </div>
         </div>
+
         <DialogFooter className="flex justify-between sm:justify-between">
           <Button variant="outline" onClick={onClose}>
-            Cancelar
+            Cerrar
           </Button>
-          <Button onClick={handleCambiarEstado}>Guardar Cambios</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
