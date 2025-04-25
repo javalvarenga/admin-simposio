@@ -37,7 +37,9 @@ import {
   Eye,
   Edit,
   Trash2,
+  FileText,
   CreditCard,
+  Shirt,
 } from "lucide-react";
 import { useGetAllParticipants } from "@/hooks/Participants/useGetAllParticipants";
 import { changePaymmentStatus } from "@/services/Participants";
@@ -45,6 +47,7 @@ import { changeKitStatus } from "@/services/Participants";
 import { KitEntregadoIcon, KitNoEntregadoIcon } from "@/components/ui/icons"; // Asegúrate de importar los íconos correctos
 import { deleteParticipant } from "@/services/Participants"; // Asegúrate de importar la función de eliminación
 import { updateParticipant } from "@/services/Participants"; // Asegúrate de importar la función de actualización
+
 // Tipos para los participantes
 type TipoParticipante = "E" | "C" | "I";
 // Actualizar el tipo EstadoPago
@@ -53,6 +56,8 @@ type EstadoPago = "P" | "C" | "R" | "V";
 type TipoPago = "E" | "D";
 
 type estadoKit = 0 | 1;
+
+type estadoCert = 0 | 1;
 
 export interface Participante {
   idParticipante: number;
@@ -69,7 +74,7 @@ export interface Participante {
   institucion: string;
   Rol: string;
   codigoQR: string;
-  certificadoEnviado: boolean; // tinyint lo puedes mapear a boolean en TS
+  certificadoEnviado: number; // tinyint lo puedes mapear a boolean en TS
   kit: number; // tinyint lo puedes mapear a boolean en TS
   estadoPago: EstadoPago;
   tipoPago: TipoPago;
@@ -95,12 +100,10 @@ const estadoPagoMap: Record<EstadoPago, string> = {
   V: "Verificando",
 };
 
-
-
 const formatDate = (isoString: string): string => {
   const date = new Date(isoString);
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const year = date.getUTCFullYear();
   return `${day}-${month}-${year}`;
 };
@@ -168,25 +171,62 @@ export function ParticipantesTable() {
     );
   };
 
-    // Función para cambiar el estado del kit
-    const cambiarEstadoKit = async (id: number, nuevoEstado: estadoKit) => {
+  // Función para enviar QR
+  const enviarQr = async (id: number, nuevoEstado: EstadoPago) => {
+    setParticipantes(
+      participantes.map((p) =>
+        p.idParticipante === id ? { ...p, estadoPago: nuevoEstado } : p
+      )
+    );
+
+    const result = await changePaymmentStatus(id, nuevoEstado);
+    console.log("result of changePaymmentStatus", result);
+
+    sweetAlert(
+      "Pago actualizado",
+      "El estado de pago fue cambiado",
+      "success",
+      5000
+    );
+  };
+
+  // Función para cambiar el estado del kit
+  const cambiarEstadoKit = async (id: number, nuevoEstado: estadoKit) => {
+    setParticipantes(
+      participantes.map((p) =>
+        p.idParticipante === id ? { ...p, kit: nuevoEstado } : p
+      )
+    );
+
+    const result = await changeKitStatus(id, nuevoEstado);
+    console.log("result of changeKitStatus", result);
+
+    sweetAlert(
+      "Estado del kit actualizado",
+      "El estado del kit fue cambiado correctamente",
+      "success",
+      5000
+    );
+  };
+
+  // Función para cambiar el estado del kit
+  /*    const cambiarEstadoCert = async (id: number, nuevoEstado: estadoCert) => {
       setParticipantes(
         participantes.map((p) =>
-          p.idParticipante === id ? { ...p, kit: nuevoEstado } : p
+          p.idParticipante === id ? { ...p, certificadoEnviado: nuevoEstado } : p
         )
       );
   
-      const result = await changeKitStatus(id, nuevoEstado);
-      console.log("result of changeKitStatus", result);
+      const result = await changeCertStatus(id, nuevoEstado);
+      console.log("result of changeCertStatus", result);
   
       sweetAlert(
-        "Estado del kit actualizado",
-        "El estado del kit fue cambiado correctamente",
+        "Estado del certificado actualizado",
+        "El estado del certificado fue cambiado correctamente",
         "success",
         5000
       );
-    };
-
+    }; */
 
   // Función para cambiar el tipo de pago
   const cambiarTipoPago = (id: number, nuevoTipo: TipoPago) => {
@@ -197,15 +237,17 @@ export function ParticipantesTable() {
     );
   };
 
-  const actualizarParticipante = async (participanteActualizado: Participante) => {
+  const actualizarParticipante = async (
+    participanteActualizado: Participante
+  ) => {
     try {
       const response = await updateParticipant(
         participanteActualizado.idParticipante,
         participanteActualizado
       );
-  
+
       const result = response.data; // ← Aquí extraes solo los datos
-  
+
       setParticipantes(
         participantes.map((p) =>
           p.idParticipante === participanteActualizado.idParticipante
@@ -213,14 +255,14 @@ export function ParticipantesTable() {
             : p
         )
       );
-  
+
       sweetAlert(
         "Participante actualizado",
         "Los datos del participante fueron actualizados correctamente.",
         "success",
         5000
       );
-  
+
       setIsEditOpen(false);
     } catch (error) {
       console.error("Error al actualizar participante:", error);
@@ -232,43 +274,40 @@ export function ParticipantesTable() {
       );
     }
   };
-  
 
+  // Función para eliminar un participante
+  const eliminarParticipante = async (id: number) => {
+    try {
+      // Llamada al backend
+      const result = await deleteParticipant(id);
+      console.log("Participante eliminado:", result);
 
-// Función para eliminar un participante
-const eliminarParticipante = async (id: number) => {
-  try {
-    // Llamada al backend
-    const result = await deleteParticipant(id);
-    console.log("Participante eliminado:", result);
+      // Actualización en el frontend
+      setParticipantes(participantes?.filter((p) => p.idParticipante !== id));
+      setIsDeleteOpen(false);
 
-    // Actualización en el frontend
-    setParticipantes(participantes?.filter((p) => p.idParticipante !== id));
-    setIsDeleteOpen(false);
-
-    sweetAlert(
-      "Participante eliminado",
-      "El participante fue eliminado correctamente.",
-      "success",
-      5000
-    );
-  } catch (error) {
-    console.error("Error al eliminar participante:", error);
-    sweetAlert(
-      "Error",
-      "No se pudo eliminar el participante.",
-      "error",
-      5000
-    );
-  }
-};
-
+      sweetAlert(
+        "Participante eliminado",
+        "El participante fue eliminado correctamente.",
+        "success",
+        5000
+      );
+    } catch (error) {
+      console.error("Error al eliminar participante:", error);
+      sweetAlert(
+        "Error",
+        "No se pudo eliminar el participante.",
+        "error",
+        5000
+      );
+    }
+  };
 
   // Función para formatear la fecha
   const formatDate = (isoString: string): string => {
     const date = new Date(isoString);
-    const day = String(date.getUTCDate()).padStart(2, '0'); // Día con 2 dígitos
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Meses son 0-based
+    const day = String(date.getUTCDate()).padStart(2, "0"); // Día con 2 dígitos
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0"); // Meses son 0-based
     const year = date.getUTCFullYear();
     return `${day}-${month}-${year}`;
   };
@@ -278,10 +317,11 @@ const eliminarParticipante = async (id: number) => {
     // Filtrar por búsqueda
     let result = participantes?.filter(
       (p) =>
-        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.correoElectronico.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.institucion.toLowerCase().includes(searchTerm.toLowerCase())
+        p.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.correoElectronico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.institucion?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
 
     // Filtrar por tipo
     if (tipoFilter !== "todos") {
@@ -289,8 +329,13 @@ const eliminarParticipante = async (id: number) => {
     }
 
     // Filtrar por estado
-    if (estadoFilter !== "todos") {
+    if (
+      estadoFilter !== "todos" &&
+      estadoFilter !== "K"
+    ) {
       result = result.filter((p) => p.estadoPago === estadoFilter);
+    } else if (estadoFilter === "K") {
+      result = result.filter((p) => p.kit == 0 && p.estadoPago == "C");
     }
 
     // Filtrar por tipo de pago
@@ -335,12 +380,17 @@ const eliminarParticipante = async (id: number) => {
       (p) => p.estadoPago === "R"
     ).length;
 
+    const kitsPendientesDeEntregar = participantes?.filter(
+      (p) => p.kit == 0 && p.estadoPago == "C"
+    ).length;
+
     return {
       total,
       pendientesPago,
       pagados,
       verificacionPendiente,
       rechazados,
+      kitsPendientesDeEntregar,
     };
   }, [participantes]);
 
@@ -363,7 +413,7 @@ const eliminarParticipante = async (id: number) => {
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         <Card
           className={`cursor-pointer transition-all hover:shadow-md ${
             estadoFilter === "todos" ? "ring-2 ring-primary ring-offset-2" : ""
@@ -453,6 +503,25 @@ const eliminarParticipante = async (id: number) => {
             </div>
           </CardContent>
         </Card>
+        <Card
+          className={`cursor-pointer transition-all hover:shadow-md ${
+            estadoFilter === "Kits pendientes de entregar"
+              ? "ring-2 ring-primary ring-offset-2"
+              : ""
+          }`}
+          onClick={() => setEstadoFilter("K")}
+        >
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <p className="text-sm font-medium text-muted-foreground">
+                Kits pendientes de entregar
+              </p>
+              <h3 className="text-3xl font-bold mt-2 text-red-600">
+                {totales.kitsPendientesDeEntregar}
+              </h3>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="mb-6">
@@ -461,7 +530,7 @@ const eliminarParticipante = async (id: number) => {
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, email o institución..."
+                placeholder="Buscar por nombre, correo electrónico o institución..."
                 className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -488,8 +557,9 @@ const eliminarParticipante = async (id: number) => {
                   <SelectItem value="todos">Todos los estados</SelectItem>
                   <SelectItem value="P">Pendiente</SelectItem>
                   <SelectItem value="C">Completado</SelectItem>
-                  <SelectItem value="R">Recibido</SelectItem>
+                  <SelectItem value="R">Rechazado</SelectItem>
                   <SelectItem value="V">Verificando</SelectItem>
+                  <SelectItem value="K">Kits pendientes de entregar</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -509,7 +579,7 @@ const eliminarParticipante = async (id: number) => {
       </Card>
 
       <div className="rounded-md border">
-        <Table>
+        <Table style={{ maxHeight: "500px !important" }}>
           <TableHeader>
             <TableRow>
               <TableHead onClick={() => requestSort("idParticipante")}>
@@ -570,10 +640,10 @@ const eliminarParticipante = async (id: number) => {
                   {renderSortIcon("fechaRegistro")}
                 </div>
               </TableHead>
-              <TableHead onClick={() => requestSort("certificadoEnviado")}>
+              {/*   <TableHead onClick={() => requestSort("certificadoEnviado")}>
                 Cert. Enviado
                 {renderSortIcon("certificadoEnviado")}
-              </TableHead>
+              </TableHead> */}
               <TableHead onClick={() => requestSort("kit")}>
                 Kit entregado
                 {renderSortIcon("kit")}
@@ -582,7 +652,7 @@ const eliminarParticipante = async (id: number) => {
             </TableRow>
           </TableHeader>
 
-          <TableBody>
+          <TableBody style={{ maxHeight: "500px !important" }}>
             {isLoading ? (
               <div
                 style={{
@@ -620,10 +690,15 @@ const eliminarParticipante = async (id: number) => {
                   <TableCell>
                     <Badge
                       variant={
-                        participante.estadoPago === "C" ? "success" :
-                        participante.estadoPago === "P" ? "default" :
-                        participante.estadoPago === "R" ? "destructive" :
-                        participante.estadoPago === "V" ? "warning" : "secondary"
+                        participante.estadoPago === "C"
+                          ? "success"
+                          : participante.estadoPago === "P"
+                          ? "default"
+                          : participante.estadoPago === "R"
+                          ? "destructive"
+                          : participante.estadoPago === "V"
+                          ? "warning"
+                          : "secondary"
                       }
                     >
                       {estadoPagoMap[participante.estadoPago]}
@@ -634,14 +709,16 @@ const eliminarParticipante = async (id: number) => {
                       {tipoPagoMap[participante.tipoPago]}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatDate(participante.fechaRegistro)}</TableCell>
                   <TableCell>
-                    {participante.certificadoEnviado ? "Sí" : "No"}
+                    {formatDate(participante.fechaRegistro)}
                   </TableCell>
+
                   <TableCell>
-                  <Badge variant={participante.kit ? "success" : "destructive"}>
-                    {participante.kit ? "Sí" : "No"}
-                  </Badge>
+                    <Badge
+                      variant={participante.kit ? "success" : "destructive"}
+                    >
+                      {participante.kit ? "Sí" : "No"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
@@ -712,24 +789,48 @@ const eliminarParticipante = async (id: number) => {
                       </DropdownMenu>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" title="Cambiar estado del kit">
-                            {participante.kit === 1 ? (
-                              <KitEntregadoIcon /> // Ícono verde si está entregado
-                            ) : (
-                              <KitNoEntregadoIcon /> // Ícono rojo si no está entregado
-                            )}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            title="Cambiar estado del kit"
+                          >
+                            <Shirt className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-
                         <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
-                            Entregado
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
+                          {participante.estadoPago === "C" ? (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                cambiarEstadoKit(participante.idParticipante, 1)
+                              }
+                            >
+                              Entregado
+                            </DropdownMenuItem>
+                          ) : null}
+                          <DropdownMenuItem
+                            onClick={() =>
+                              cambiarEstadoKit(participante.idParticipante, 0)
+                            }
+                          >
                             No entregado
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      {/* <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title="Cambiar estado del certificado">
+                <FileText className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => cambiarEstadoCert(participante.idParticipante, 1)}>
+                Enviado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cambiarEstadoCert(participante.idParticipante, 0)}>
+                No enviado
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu> */}
                       <Button
                         variant="outline"
                         size="icon"
@@ -789,7 +890,9 @@ const eliminarParticipante = async (id: number) => {
           isOpen={isDeleteOpen}
           onClose={() => setIsDeleteOpen(false)}
           participante={selectedParticipante}
-          onConfirm={() => eliminarParticipante(selectedParticipante.idParticipante)}
+          onConfirm={() =>
+            eliminarParticipante(selectedParticipante.idParticipante)
+          }
         />
       )}
     </>
