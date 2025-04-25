@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.simposioumg.site/api/v1";
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +23,7 @@ export function LoginForm() {
     const password = formData.get("password") as string;
 
     try {
-      const response = await axios.post('http://localhost:8080/api/v1/administrators', {
+      const response = await axios.post(`${API_URL}/administrators`, {
         username,
         password
       });
@@ -38,7 +39,6 @@ export function LoginForm() {
       }
     } catch (error: any) {
       setError("Credenciales incorrectas o error al intentar iniciar sesión.");
-      console.error("Error de autenticación:", error);
     } finally {
       setIsLoading(false);
     }
