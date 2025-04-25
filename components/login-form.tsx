@@ -31,6 +31,8 @@ export function LoginForm() {
       console.log(response);
 
       if (response.status === 200) {
+        /* set localstorager value to indicate valid login in another pages or tabs */
+        localStorage.setItem("isLoggedIn", "true");
         console.log("Login exitoso, redirigiendo...");
         router.push("/dashboard");  // Si la respuesta es 200, redirige
       }

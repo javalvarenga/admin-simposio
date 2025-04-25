@@ -8,6 +8,7 @@ export function DashboardHeader() {
 
   const handleLogout = () => {
     // En un caso real, eliminaríamos la sesión
+    localStorage.removeItem('isLoggedIn')
     router.push("/")
   }
 
