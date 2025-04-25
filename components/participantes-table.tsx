@@ -170,6 +170,26 @@ export function ParticipantesTable() {
     );
   };
 
+      // Función para enviar QR
+  const enviarQr = async (id: number, nuevoEstado: EstadoPago) => {
+    setParticipantes(
+      participantes.map((p) =>
+        p.idParticipante === id ? { ...p, estadoPago: nuevoEstado } : p
+      )
+    );
+
+    const result = await changePaymmentStatus(id, nuevoEstado);
+    console.log("result of changePaymmentStatus", result);
+
+    sweetAlert(
+      "Pago actualizado",
+      "El estado de pago fue cambiado",
+      "success",
+      5000
+    );
+  };
+
+
     // Función para cambiar el estado del kit
     const cambiarEstadoKit = async (id: number, nuevoEstado: estadoKit) => {
       setParticipantes(
@@ -701,7 +721,7 @@ export function ParticipantesTable() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" title="Cambiar estado del certificado">
                 <FileText className="h-4 w-4" />
@@ -715,7 +735,7 @@ export function ParticipantesTable() {
                 No enviado
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
                       <Button
                         variant="outline"
                         size="icon"
