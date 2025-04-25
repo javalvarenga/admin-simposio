@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect } from "react";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -10,57 +10,102 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import { Participante } from "./participantes-table";
+import { useGetParticipantById } from "@/hooks/Participants/useGetParticipantById";
 
-// Genera el src para <img> o <iframe> según el tipo de boleta
-function generarSrc(boleta: string | { type: string; data: number[] }) {
-  if (typeof boleta === "string") {
-    if (boleta.startsWith("data:")) {
-      return boleta;
-    }
-
-    // Detecta si probablemente es PDF por la codificación (comienza con "JVBER")
-    const probablePDF = boleta.slice(0, 10).includes("JVBER") || boleta.includes("base64,aVZCT1J3");
-    return probablePDF
-      ? `data:application/pdf;base64,${boleta}`
-      : `data:image/png;base64,${boleta}`; // Cambia a image/jpeg si usás JPG
-  } else if (boleta && boleta.data && Array.isArray(boleta.data)) {
-    const byteArray = new Uint8Array(boleta.data);
-    const base64String = btoa(String.fromCharCode(...byteArray));
-    return `data:application/pdf;base64,${base64String}`;
+function getMimeTypeFromBuffer(buffer: Buffer): string | null {
+  if (!buffer || buffer.length < 8) {
+    return null;
   }
 
-  return "";
+  // PNG
+  if (
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47 &&
+    buffer[4] === 0x0d &&
+    buffer[5] === 0x0a &&
+    buffer[6] === 0x1a &&
+    buffer[7] === 0x0a
+  ) {
+    return "image/png";
+  }
+
+  // JPEG
+  if (
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[buffer.length - 2] === 0xff &&
+    buffer[buffer.length - 1] === 0xd9
+  ) {
+    return "image/png";
+  }
+
+  return 'image/png'; // Desconocido
 }
 
 interface VerBoletaDialogProps {
   isOpen: boolean;
   onClose: () => void;
   participante: Participante;
+  onCambiarEstado: (id: number, nuevoEstado: string) => void;
+  onCambiarTipoPago?: (id: number, nuevoTipo: string) => void;
 }
 
 export function VerBoletaDialog({
   isOpen,
   onClose,
   participante,
+  onCambiarEstado,
+  onCambiarTipoPago,
 }: VerBoletaDialogProps) {
-  const srcBoleta = useMemo(() => generarSrc(participante.boleta), [participante.boleta]);
+  const { result, isLoading } = useGetParticipantById(
+    participante?.idParticipante
+  );
 
-  const esPDF = useMemo(() => {
-    return srcBoleta.startsWith("data:application/pdf");
-  }, [srcBoleta]);
+  const participanteById = result;
 
-  useEffect(() => {
-    if (srcBoleta) {
-      console.log("Base64 generado para boleta:", srcBoleta);
+  // Verificar primero si los datos están cargados
+  /* const base64Image = participanteById?.boleta?.data
+    ? `data:image/png;base64,${Buffer.from(
+        participanteById.boleta.data
+      ).toString("utf8")}`
+    : null;  */
+ 
+  const base64Image = participanteById?.boleta?.data
+    ? `data:${getMimeTypeFromBuffer(
+        participanteById.boleta.data
+      )};base64,${Buffer.from(participanteById.boleta.data).toString("utf8")}`
+    : null; 
+
+ 
+
+  const [estadoSeleccionado, setEstadoSeleccionado] = useState(
+    participante?.estadoPago
+  );
+  const [tipoPagoSeleccionado, setTipoPagoSeleccionado] = useState(
+    participante?.tipoPago
+  );
+
+  const handleCambiarEstado = () => {
+    onCambiarEstado(participante.idParticipante, estadoSeleccionado);
+
+    if (onCambiarTipoPago && tipoPagoSeleccionado !== participante.tipoPago) {
+      onCambiarTipoPago(participante.idParticipante, tipoPagoSeleccionado);
     }
-  }, [srcBoleta]);
 
-  const handleDescargarBoleta = () => {
-    const link = document.createElement("a");
-    link.href = srcBoleta;
-    link.download = `boleta_${participante.idParticipante}${esPDF ? ".pdf" : ".png"}`;
-    link.click();
+    onClose();
   };
 
   return (
@@ -73,41 +118,62 @@ export function VerBoletaDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col space-y-4">
+        <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <span className="font-medium">Estado de pago:</span>
-            <span>{participante.estadoPago}</span>
+            <Label>Estado actual:</Label>
+            <Badge
+              variant={
+                participante.estadoPago === "C"
+                  ? "success"
+                  : participante.estadoPago === "V"
+                  ? "warning"
+                  : participante.estadoPago === "P"
+                  ? "default"
+                  : "destructive"
+              }
+            >
+              {participante.estadoPago === "C"
+                ? "Pagado"
+                : participante.estadoPago === "V"
+                ? "Verificación"
+                : participante.estadoPago === "P"
+                ? "Pendiente"
+                : "Rechazado"}
+            </Badge>
           </div>
 
-          <div className="border rounded-md overflow-hidden max-h-[600px]">
-            {srcBoleta ? (
-              esPDF ? (
-                <iframe
-                  src={srcBoleta}
-                  title="Boleta PDF"
-                  width="100%"
-                  height="600px"
-                  className="rounded"
-                />
-              ) : (
-                <img
-                  src={srcBoleta}
+          <div className="flex justify-between items-center">
+            <Label>Tipo de pago:</Label>
+            <Badge
+              variant={participante.tipoPago === "E" ? "outline" : "secondary"}
+            >
+              {participante.tipoPago === "E" ? "Efectivo" : "Depósito"}
+            </Badge>
+          </div>
+
+          <div className="flex justify-between">
+            <Label>Fecha de registro:</Label>
+            <span>
+              {new Date(participante.fechaRegistro).toLocaleDateString()}
+            </span>
+          </div>
+
+          {base64Image && (
+            <>
+              <div className="border-t pt-4">
+                <Label>Boleta de pago</Label>
+              </div>
+              <div className="border rounded-md overflow-hidden">
+                <Image
+                  src={base64Image || "/placeholder.svg"}
                   alt="Boleta de pago"
+                  width={400}
+                  height={300}
                   className="w-full h-auto object-contain"
                 />
-              )
-            ) : (
-              <p className="text-sm text-muted-foreground p-4 text-center">
-                No se ha subido ninguna boleta.
-              </p>
-            )}
-          </div>
-
-          <div className="mt-4">
-            <Button variant="outline" onClick={handleDescargarBoleta}>
-              Descargar Boleta
-            </Button>
-          </div>
+              </div>
+            </>
+          )}
         </div>
 
         <DialogFooter className="flex justify-between sm:justify-between">

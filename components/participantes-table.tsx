@@ -37,7 +37,9 @@ import {
   Eye,
   Edit,
   Trash2,
+  FileText ,
   CreditCard,
+  Shirt,
 } from "lucide-react";
 import { useGetAllParticipants } from "@/hooks/Participants/useGetAllParticipants";
 import { changePaymmentStatus } from "@/services/Participants";
@@ -45,6 +47,7 @@ import { changeKitStatus } from "@/services/Participants";
 import { KitEntregadoIcon, KitNoEntregadoIcon } from "@/components/ui/icons"; // Asegúrate de importar los íconos correctos
 import { deleteParticipant } from "@/services/Participants"; // Asegúrate de importar la función de eliminación
 import { updateParticipant } from "@/services/Participants"; // Asegúrate de importar la función de actualización
+
 // Tipos para los participantes
 type TipoParticipante = "E" | "C" | "I";
 // Actualizar el tipo EstadoPago
@@ -53,6 +56,8 @@ type EstadoPago = "P" | "C" | "R" | "V";
 type TipoPago = "E" | "D";
 
 type estadoKit = 0 | 1;
+
+type estadoCert = 0 | 1;
 
 export interface Participante {
   idParticipante: number;
@@ -69,7 +74,7 @@ export interface Participante {
   institucion: string;
   Rol: string;
   codigoQR: string;
-  certificadoEnviado: boolean; // tinyint lo puedes mapear a boolean en TS
+  certificadoEnviado: number; // tinyint lo puedes mapear a boolean en TS
   kit: number; // tinyint lo puedes mapear a boolean en TS
   estadoPago: EstadoPago;
   tipoPago: TipoPago;
@@ -168,6 +173,26 @@ export function ParticipantesTable() {
     );
   };
 
+      // Función para enviar QR
+  const enviarQr = async (id: number, nuevoEstado: EstadoPago) => {
+    setParticipantes(
+      participantes.map((p) =>
+        p.idParticipante === id ? { ...p, estadoPago: nuevoEstado } : p
+      )
+    );
+
+    const result = await changePaymmentStatus(id, nuevoEstado);
+    console.log("result of changePaymmentStatus", result);
+
+    sweetAlert(
+      "Pago actualizado",
+      "El estado de pago fue cambiado",
+      "success",
+      5000
+    );
+  };
+
+
     // Función para cambiar el estado del kit
     const cambiarEstadoKit = async (id: number, nuevoEstado: estadoKit) => {
       setParticipantes(
@@ -186,6 +211,26 @@ export function ParticipantesTable() {
         5000
       );
     };
+
+
+    // Función para cambiar el estado del kit
+ /*    const cambiarEstadoCert = async (id: number, nuevoEstado: estadoCert) => {
+      setParticipantes(
+        participantes.map((p) =>
+          p.idParticipante === id ? { ...p, certificadoEnviado: nuevoEstado } : p
+        )
+      );
+  
+      const result = await changeCertStatus(id, nuevoEstado);
+      console.log("result of changeCertStatus", result);
+  
+      sweetAlert(
+        "Estado del certificado actualizado",
+        "El estado del certificado fue cambiado correctamente",
+        "success",
+        5000
+      );
+    }; */
 
 
   // Función para cambiar el tipo de pago
@@ -278,9 +323,9 @@ const eliminarParticipante = async (id: number) => {
     // Filtrar por búsqueda
     let result = participantes?.filter(
       (p) =>
-        p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.correoElectronico.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.institucion.toLowerCase().includes(searchTerm.toLowerCase())
+        p.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.correoElectronico?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.institucion?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     // Filtrar por tipo
@@ -508,8 +553,8 @@ const eliminarParticipante = async (id: number) => {
         </CardContent>
       </Card>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border" >
+        <Table style={{maxHeight: "500px !important"}}>
           <TableHeader>
             <TableRow>
               <TableHead onClick={() => requestSort("idParticipante")}>
@@ -582,7 +627,7 @@ const eliminarParticipante = async (id: number) => {
             </TableRow>
           </TableHeader>
 
-          <TableBody>
+          <TableBody style={{ maxHeight: "500px !important" }}>
             {isLoading ? (
               <div
                 style={{
@@ -636,7 +681,9 @@ const eliminarParticipante = async (id: number) => {
                   </TableCell>
                   <TableCell>{formatDate(participante.fechaRegistro)}</TableCell>
                   <TableCell>
-                    {participante.certificadoEnviado ? "Sí" : "No"}
+                    <Badge variant={participante.certificadoEnviado ? "success" : "destructive"}>
+                      {participante.certificadoEnviado ? "Sí" : "No"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                   <Badge variant={participante.kit ? "success" : "destructive"}>
@@ -711,25 +758,35 @@ const eliminarParticipante = async (id: number) => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="icon" title="Cambiar estado del kit">
-                            {participante.kit === 1 ? (
-                              <KitEntregadoIcon /> // Ícono verde si está entregado
-                            ) : (
-                              <KitNoEntregadoIcon /> // Ícono rojo si no está entregado
-                            )}
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
-                            Entregado
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
-                            No entregado
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title="Cambiar estado del kit">
+                <Shirt className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 1)}>
+                Entregado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cambiarEstadoKit(participante.idParticipante, 0)}>
+                No entregado
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {/* <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" title="Cambiar estado del certificado">
+                <FileText className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => cambiarEstadoCert(participante.idParticipante, 1)}>
+                Enviado
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => cambiarEstadoCert(participante.idParticipante, 0)}>
+                No enviado
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu> */}
                       <Button
                         variant="outline"
                         size="icon"
