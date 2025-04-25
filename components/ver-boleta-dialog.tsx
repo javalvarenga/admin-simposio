@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,8 +10,28 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { Participante } from "./participantes-table";
+
+// Genera el src para <img> o <iframe> según el tipo de boleta
+function generarSrc(boleta: string | { type: string; data: number[] }) {
+  if (typeof boleta === "string") {
+    if (boleta.startsWith("data:")) {
+      return boleta;
+    }
+
+    // Detecta si probablemente es PDF por la codificación (comienza con "JVBER")
+    const probablePDF = boleta.slice(0, 10).includes("JVBER") || boleta.includes("base64,aVZCT1J3");
+    return probablePDF
+      ? `data:application/pdf;base64,${boleta}`
+      : `data:image/png;base64,${boleta}`; // Cambia a image/jpeg si usás JPG
+  } else if (boleta && boleta.data && Array.isArray(boleta.data)) {
+    const byteArray = new Uint8Array(boleta.data);
+    const base64String = btoa(String.fromCharCode(...byteArray));
+    return `data:application/pdf;base64,${base64String}`;
+  }
+
+  return "";
+}
 
 interface VerBoletaDialogProps {
   isOpen: boolean;
@@ -23,24 +44,21 @@ export function VerBoletaDialog({
   onClose,
   participante,
 }: VerBoletaDialogProps) {
-  // Detecta si es PDF
-  const esPDF = participante.boleta?.startsWith("data:application/pdf") ||
-                participante.boleta?.endsWith(".pdf");
+  const srcBoleta = useMemo(() => generarSrc(participante.boleta), [participante.boleta]);
 
-  // Genera un src válido a partir de base64 o una URL con prefijo
-  const generarSrc = (boleta: string) => {
-    if (!boleta.startsWith("data:")) {
-      return esPDF
-        ? `data:application/pdf;base64,${boleta}`
-        : `data:image/png;base64,${boleta}`; // ajusta a "jpeg" si tus imágenes son JPEG
+  const esPDF = useMemo(() => {
+    return srcBoleta.startsWith("data:application/pdf");
+  }, [srcBoleta]);
+
+  useEffect(() => {
+    if (srcBoleta) {
+      console.log("Base64 generado para boleta:", srcBoleta);
     }
-    return boleta;
-  };
+  }, [srcBoleta]);
 
-  // Descargar la boleta
   const handleDescargarBoleta = () => {
     const link = document.createElement("a");
-    link.href = generarSrc(participante.boleta);
+    link.href = srcBoleta;
     link.download = `boleta_${participante.idParticipante}${esPDF ? ".pdf" : ".png"}`;
     link.click();
   };
@@ -62,10 +80,10 @@ export function VerBoletaDialog({
           </div>
 
           <div className="border rounded-md overflow-hidden max-h-[600px]">
-            {participante.boleta ? (
+            {srcBoleta ? (
               esPDF ? (
                 <iframe
-                  src={generarSrc(participante.boleta)}
+                  src={srcBoleta}
                   title="Boleta PDF"
                   width="100%"
                   height="600px"
@@ -73,7 +91,7 @@ export function VerBoletaDialog({
                 />
               ) : (
                 <img
-                  src={generarSrc(participante.boleta)}
+                  src={srcBoleta}
                   alt="Boleta de pago"
                   className="w-full h-auto object-contain"
                 />
