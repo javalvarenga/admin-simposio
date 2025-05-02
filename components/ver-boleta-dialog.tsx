@@ -165,6 +165,7 @@ export function VerBoletaDialog({
               </div>
               <div className="border rounded-md overflow-hidden">
                 <Image
+                style={{height:'300px',objectFit:'contain'}}
                   src={base64Image || "/placeholder.svg"}
                   alt="Boleta de pago"
                   width={400}
